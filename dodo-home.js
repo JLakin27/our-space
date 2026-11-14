@@ -20,7 +20,9 @@
     sprite.style.backgroundSize=`${m.columns*100}% ${m.rows*100}%`;
     sprite.style.backgroundPosition=`${m.columns===1?0:c*100/(m.columns-1)}% ${m.rows===1?0:r*100/(m.rows-1)}%`;
   }
-  const place=p=>{character.style.transform=`translateX(${p}%)`;};
+  // Sprite artwork is visually right-heavy inside its transparent frame.
+  // Centre its visible body in the little scene without editing the purchased art.
+  const place=p=>{character.style.transform=`translateX(calc(${p}% - 12%))`;};
   function stop(){clear();visible=false;mode='rest';}
   function isUsable(){return ready&&!document.hidden&&!view.hidden&&home.getClientRects().length>0;}
   // Play only a finite action. Between actions, the sprite is a completely still frame.
