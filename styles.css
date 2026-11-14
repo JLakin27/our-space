@@ -205,3 +205,31 @@ html{-webkit-tap-highlight-color:transparent}
 .dodo-home-hint{position:absolute;z-index:3;left:50%;bottom:5px;transform:translateX(-50%);white-space:nowrap;border-radius:99px;padding:3px 7px;background:rgba(255,253,247,.90);color:#516c56;font-size:10px;font-weight:750;line-height:1.2;letter-spacing:0;pointer-events:none;box-shadow:0 1px 4px #536a481a;transition:opacity .2s ease}
 .dodo-home-hint.is-away{background:rgba(255,253,247,.95);color:#4c6e58}
 @media(prefers-reduced-motion:reduce){.dodo-home-hint{transition:none}}
+
+/* Dodo Home V3: angled interaction ribbon above the bird, never over his feet. */
+.dodo-home-hint{
+  top:7px;right:-10px;bottom:auto;left:auto;
+  transform:rotate(17deg);transform-origin:center;
+  padding:3px 13px;min-width:67px;text-align:center;
+  border-radius:3px;background:#fffdf3ed;color:#516c56;
+  font-size:9px;letter-spacing:.05px;
+  box-shadow:0 1px 5px #50604416;
+}
+.dodo-home-hint.is-away{
+  top:auto;right:50%;bottom:8px;left:auto;
+  transform:translateX(50%);padding:3px 8px;
+  border-radius:99px;min-width:0;
+  background:#fffdf5f2;white-space:nowrap;
+}
+.dodo-home.is-away::after{
+  content:'🔔';position:absolute;z-index:3;
+  left:50%;top:47%;transform:translate(-50%,-50%);
+  font-size:24px;pointer-events:none;
+  filter:drop-shadow(0 1px 2px #52614a22);
+}
+.dodo-home.is-returning .dodo-home-hint{
+  top:7px;bottom:auto;right:-10px;left:auto;
+  transform:rotate(17deg);
+}
+/* Keep the sun away from the corner label. */
+.dodo-home-sun{top:13px;right:auto;left:12px}

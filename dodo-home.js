@@ -13,7 +13,7 @@
   const rand=(min,max)=>min+Math.random()*(max-min);
   const pick=list=>list[Math.floor(Math.random()*list.length)];
   const art={};let ready=false,active=false,inViewport=false,away=false,mode='stopped';
-  let raf=0,timer=0,epoch=0,departureAt=0;
+  let raf=0,timer=0,epoch=0,departureAt=0,summoned=false;
 
   function cancel(){epoch++;if(raf)cancelAnimationFrame(raf);raf=0;if(timer)clearTimeout(timer);timer=0;}
   function later(fn,ms){if(!active)return;const token=epoch;timer=setTimeout(()=>{timer=0;if(active&&token===epoch)fn();},ms);}
@@ -25,8 +25,21 @@
     sprite.style.backgroundPosition=`${m.columns===1?0:col*100/(m.columns-1)}% ${m.rows===1?0:row*100/(m.rows-1)}%`;
   }
   function updateHint(){
-    if(away||mode==='leaving'){hint.textContent='🔔 Call me back';hint.classList.add('is-away');home.setAttribute('aria-label','Call the dodo back');}
-    else{hint.textContent='Tap me!';hint.classList.remove('is-away');home.setAttribute('aria-label','Tap the dodo for a reaction');}
+    const exploring=away||mode==='leaving'||mode==='called';
+    const returning=mode==='returning';
+    home.classList.toggle('is-away',exploring);
+    home.classList.toggle('is-returning',returning);
+    hint.classList.toggle('is-away',exploring);
+    if(returning){
+      hint.textContent='On my way!';
+      home.setAttribute('aria-label','Dodo is walking back');
+    }else if(exploring){
+      hint.textContent=summoned?'Coming back…':'Call me back';
+      home.setAttribute('aria-label','Ring the bell to call Dodo back');
+    }else{
+      hint.textContent='Tap me!';
+      home.setAttribute('aria-label','Tap Dodo for a reaction');
+    }
   }
   function playable(){return ready&&!document.hidden&&!view.hidden&&home.getClientRects().length>0&&inViewport;}
   function stop(){cancel();active=false;mode='stopped';}
@@ -61,25 +74,63 @@
     raf=requestAnimationFrame(tick);
   }
   function look(){if(!active||away)return;play('idle_look_at_camera',()=>{if(active)idle();});}
-  function leave(){if(!active||away)return;
+  function leave(){
+    if(!active||away)return;
+    summoned=false;
+    // His sprite naturally faces LEFT, so he walks out to the left.
+    play('walk',()=>{
+      if(!active)return;
+      away=true;mode='away';position(-130);frame('idle',0);updateHint();
+      if(summoned)requestReturn();
+      else later(returnHome,rand(10000,17000));
+    },{duration:1150,travel:{from:0,to:-130}});
     mode='leaving';updateHint();
-    play('walk',()=>{if(!active)return;away=true;mode='away';position(130);frame('idle',0);updateHint();later(returnHome,rand(10000,17000));},{duration:1150,travel:{from:0,to:130}});
   }
-  function returnHome(){if(!active)return;cancel();away=false;mode='returning';updateHint();position(130);
-    play('walk',()=>{if(!active)return;departureAt=Date.now()+rand(25000,40000);idle();},{duration:1050,travel:{from:130,to:0}});
+  function walkIn(){
+    if(!active)return;
+    summoned=false;away=false;
+    position(130);
+    // Enter from the RIGHT, facing LEFT, without mirroring the artwork.
+    play('walk',()=>{
+      if(!active)return;
+      departureAt=Date.now()+rand(25000,40000);
+      idle();
+    },{duration:1150,travel:{from:130,to:0}});
+    mode='returning';updateHint();
+  }
+  function returnHome(){
+    // Natural returns are immediate, unlike calling him with the bell.
+    if(!active||mode==='returning'||mode==='called')return;
+    walkIn();
+  }
+  function requestReturn(){
+    if(!active||mode==='called'||mode==='returning')return;
+    if(mode==='leaving'){
+      // Finish walking out before honouring the call; never interrupt into a trick.
+      summoned=true;updateHint();return;
+    }
+    if(!away)return;
+    summoned=true;
+    cancel();mode='called';updateHint();
+    // A distinct half-second beat to make the bell feel like a call.
+    later(walkIn,500);
   }
   function react(){if(!active)return;away=false;position(0);
     play(pick(['peck','jump','squawk']),()=>{if(!active)return;departureAt=Date.now()+rand(25000,40000);idle();});
   }
-  function begin(){if(!playable()||active)return;active=true;away=false;position(0);
+  function begin(){if(!playable()||active)return;active=true;away=false;summoned=false;position(0);
     if(reduce.matches){cancel();mode='static';frame('idle',0);updateHint();return;}
     departureAt=Date.now()+rand(25000,40000);idle();
   }
   function reevaluate(){if(!playable()){if(active)stop();return;}begin();}
   home.addEventListener('click',()=>{
     if(!active||reduce.matches)return;
-    // While he's off exploring, the empty scene acts as a call bell.
-    if(away||mode==='leaving'||mode==='returning')returnHome();
+    // Call-back and trick reactions are intentionally mutually exclusive.
+    if(mode==='called'||mode==='returning')return;
+    if(away||mode==='leaving'){
+      requestReturn();
+      return;
+    }
     react();
   });
   document.addEventListener('visibilitychange',reevaluate);
