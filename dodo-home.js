@@ -1,65 +1,98 @@
-/* Tiny Dodo home: no Firebase access, no storage, no background animation. */
+/* Our Dodo: sprite-sheet mascot. No Firebase writes or account tracking. */
 (()=>{
   'use strict';
   const home=document.getElementById('dodo-home');
   const sprite=document.getElementById('dodo-home-sprite');
   const character=document.getElementById('dodo-home-character');
+  const hint=document.getElementById('dodo-home-hint');
   const view=document.getElementById('home-view');
-  if(!home||!sprite||!character||!view)return;
+  if(!home||!sprite||!character||!hint||!view)return;
 
-  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)');
-  const timings={base:90,idle:76,idle_look_at_camera:80,walk:55,peck:55,jump:65,squawk:60};
-  const rand=(a,b)=>a+Math.random()*(b-a);
-  let sheets={},ready=false,visible=false,away=false,mode='rest',handle=0,clock=0,epoch=0;
-  const imageCache=[];
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+  const timing={idle:76,idle_look_at_camera:86,walk:55,peck:55,jump:65,squawk:60};
+  const rand=(min,max)=>min+Math.random()*(max-min);
+  const pick=list=>list[Math.floor(Math.random()*list.length)];
+  const art={};let ready=false,active=false,inViewport=false,away=false,mode='stopped';
+  let raf=0,timer=0,epoch=0,departureAt=0;
 
-  function clear(){epoch++;if(handle)clearTimeout(handle);handle=0;if(clock)cancelAnimationFrame(clock);clock=0;}
-  function schedule(fn,ms){if(!visible)return;const token=epoch;handle=setTimeout(()=>{handle=0;if(token===epoch&&visible)fn();},ms);}
-  function draw(name,frame=0){const m=sheets[name];if(!m)return;const i=Math.max(0,Math.min(m.frameCount-1,frame));const c=i%m.columns,r=Math.floor(i/m.columns);
-    sprite.style.backgroundImage=`url("./dodo-assets/${name}.webp")`;
+  function cancel(){epoch++;if(raf)cancelAnimationFrame(raf);raf=0;if(timer)clearTimeout(timer);timer=0;}
+  function later(fn,ms){if(!active)return;const token=epoch;timer=setTimeout(()=>{timer=0;if(active&&token===epoch)fn();},ms);}
+  function position(p){character.style.transform=`translateX(calc(${p}% - 12%))`;}
+  function frame(name,index=0){const m=art[name];if(!m)return;
+    const n=Math.max(0,Math.min(m.frameCount-1,index)),col=n%m.columns,row=Math.floor(n/m.columns);
+    sprite.style.backgroundImage=`url('./dodo-assets/${name}.webp')`;
     sprite.style.backgroundSize=`${m.columns*100}% ${m.rows*100}%`;
-    sprite.style.backgroundPosition=`${m.columns===1?0:c*100/(m.columns-1)}% ${m.rows===1?0:r*100/(m.rows-1)}%`;
+    sprite.style.backgroundPosition=`${m.columns===1?0:col*100/(m.columns-1)}% ${m.rows===1?0:row*100/(m.rows-1)}%`;
   }
-  // Sprite artwork is visually right-heavy inside its transparent frame.
-  // Centre its visible body in the little scene without editing the purchased art.
-  const place=p=>{character.style.transform=`translateX(calc(${p}% - 12%))`;};
-  function stop(){clear();visible=false;mode='rest';}
-  function isUsable(){return ready&&!document.hidden&&!view.hidden&&home.getClientRects().length>0;}
-  // Play only a finite action. Between actions, the sprite is a completely still frame.
-  function clip(name,done,options={}){
-    clear();mode=name;const token=epoch;const m=sheets[name],duration=(options.duration||m.frameCount*timings[name]);
-    let first=0,lastFrame=-1;
-    function tick(now){if(token!==epoch||!visible)return;if(!first)first=now;
-      const t=Math.min(1,(now-first)/duration);
-      const f=Math.min(m.frameCount-1,Math.floor((now-first)/timings[name])%m.frameCount);
-      if(f!==lastFrame){draw(name,f);lastFrame=f;}
-      if(options.travel){place(options.travel.from+(options.travel.to-options.travel.from)*t);}
-      if(t>=1){clock=0;if(done)done();return;}
-      clock=requestAnimationFrame(tick);
+  function updateHint(){
+    if(away||mode==='leaving'){hint.textContent='🔔 Call me back';hint.classList.add('is-away');home.setAttribute('aria-label','Call the dodo back');}
+    else{hint.textContent='Tap me!';hint.classList.remove('is-away');home.setAttribute('aria-label','Tap the dodo for a reaction');}
+  }
+  function playable(){return ready&&!document.hidden&&!view.hidden&&home.getClientRects().length>0&&inViewport;}
+  function stop(){cancel();active=false;mode='stopped';}
+
+  // Continuous, gentle idle movement when he's home (not a static base frame).
+  // RAF only runs while the actual home scene is in view and the tab is visible.
+  function idle(){
+    if(!active)return;cancel();away=false;mode='idle';position(0);updateHint();
+    const token=epoch,m=art.idle,rate=timing.idle;let start=null,prev=-1;
+    function tick(now){if(!active||epoch!==token)return;if(start===null)start=now;
+      const f=Math.floor((now-start)/rate)%m.frameCount;if(f!==prev){frame('idle',f);prev=f;}
+      raf=requestAnimationFrame(tick);
     }
-    clock=requestAnimationFrame(tick);
+    raf=requestAnimationFrame(tick);
+    const remaining=departureAt-Date.now();
+    // Look around once or twice, then naturally wander off around every 25–40 seconds.
+    if(remaining<=8000)later(leave,Math.max(0,remaining));
+    else later(look,Math.min(rand(8500,13000),remaining-1500));
   }
-  function rest(){if(!visible)return;clear();mode='rest';away=false;place(0);draw('base',0);schedule(chooseActivity,rand(11000,19000));}
-  function chooseActivity(){if(!visible||mode!=='rest')return;
-    // After several quiet moments he occasionally takes a little walk.
-    if(Math.random()<.33){leave();return;}
-    clip('idle_look_at_camera',()=>{if(visible)rest();});
+  function play(name,done,options={}){
+    cancel();mode=name;const token=epoch,m=art[name],rate=timing[name];
+    const duration=options.duration||m.frameCount*rate;
+    let first=null,last=-1;
+    function tick(now){if(!active||epoch!==token)return;if(first===null)first=now;
+      const elapsed=now-first,frac=Math.min(1,elapsed/duration);
+      const f=Math.min(m.frameCount-1,Math.floor(elapsed/rate)%m.frameCount);
+      if(f!==last){frame(name,f);last=f;}
+      if(options.travel)position(options.travel.from+(options.travel.to-options.travel.from)*frac);
+      if(frac>=1){raf=0;if(done)done();return;}
+      raf=requestAnimationFrame(tick);
+    }
+    raf=requestAnimationFrame(tick);
   }
-  function leave(){if(!visible||away)return;mode='leaving';clip('walk',()=>{away=true;mode='away';place(130);draw('base',0);schedule(returnHome,rand(15000,26000));},{duration:1150,travel:{from:0,to:130}});}
-  function returnHome(){if(!visible)return;away=false;mode='returning';place(130);clip('walk',()=>{if(visible)rest();},{duration:1050,travel:{from:130,to:0}});}
-  function callBack(){if(!visible)return;clear();away=false;place(130);mode='returning';clip('walk',()=>{if(visible)rest();},{duration:850,travel:{from:130,to:0}});}
-  function react(){if(!visible)return;const choices=['peck','jump','squawk'];const picked=choices[Math.floor(Math.random()*choices.length)];place(0);clip(picked,()=>{if(visible)rest();});}
-  function start(){if(!isUsable()||visible)return;visible=true;if(reduce.matches){mode='still';place(0);draw('base',0);return;}away=false;place(0);clip('idle',()=>{if(visible)rest();});}
-  function reevaluate(){const should=isUsable();if(!should){if(visible)stop();return;}if(!visible)start();}
-  home.addEventListener('click',()=>{if(!visible||reduce.matches)return;if(away||mode==='leaving'||mode==='returning')callBack();else react();});
+  function look(){if(!active||away)return;play('idle_look_at_camera',()=>{if(active)idle();});}
+  function leave(){if(!active||away)return;
+    mode='leaving';updateHint();
+    play('walk',()=>{if(!active)return;away=true;mode='away';position(130);frame('idle',0);updateHint();later(returnHome,rand(10000,17000));},{duration:1150,travel:{from:0,to:130}});
+  }
+  function returnHome(){if(!active)return;cancel();away=false;mode='returning';updateHint();position(130);
+    play('walk',()=>{if(!active)return;departureAt=Date.now()+rand(25000,40000);idle();},{duration:1050,travel:{from:130,to:0}});
+  }
+  function react(){if(!active)return;away=false;position(0);
+    play(pick(['peck','jump','squawk']),()=>{if(!active)return;departureAt=Date.now()+rand(25000,40000);idle();});
+  }
+  function begin(){if(!playable()||active)return;active=true;away=false;position(0);
+    if(reduce.matches){cancel();mode='static';frame('idle',0);updateHint();return;}
+    departureAt=Date.now()+rand(25000,40000);idle();
+  }
+  function reevaluate(){if(!playable()){if(active)stop();return;}begin();}
+  home.addEventListener('click',()=>{
+    if(!active||reduce.matches)return;
+    // While he's off exploring, the empty scene acts as a call bell.
+    if(away||mode==='leaving'||mode==='returning')returnHome();
+    react();
+  });
   document.addEventListener('visibilitychange',reevaluate);
   reduce.addEventListener?.('change',()=>{stop();reevaluate();});
-  const observer=new IntersectionObserver(()=>reevaluate(),{threshold:.08});observer.observe(home);
-  // Ensure changes from the site's normal client-side navigation pause the mascot.
-  const navObserver=new MutationObserver(reevaluate);navObserver.observe(view,{attributes:true,attributeFilter:['hidden']});
-  fetch('./dodo-assets/sprites.json').then(r=>{if(!r.ok)throw Error('Dodo artwork metadata missing');return r.json()}).then(m=>{
-    sheets=m;ready=true;
-    Object.keys(m).forEach(k=>{const img=new Image();img.src='./dodo-assets/'+k+'.webp';imageCache.push(img);});
-    draw('base',0);reevaluate();
-  }).catch(err=>{console.warn('Dodo artwork did not load:',err);home.setAttribute('aria-label','Dodo is resting');});
+  new MutationObserver(reevaluate).observe(view,{attributes:true,attributeFilter:['hidden']});
+  const observer=new IntersectionObserver(entries=>{inViewport=entries[0]?.isIntersecting??false;reevaluate();},{threshold:.08});
+  observer.observe(home);
+  fetch('./dodo-assets/sprites.json').then(r=>{if(!r.ok)throw Error('Missing dodo sprites');return r.json();}).then(data=>{
+    Object.assign(art,data);ready=true;
+    // Load only the few animation sheets used here.
+    for(const key of ['idle','idle_look_at_camera','walk','peck','jump','squawk']){
+      const img=new Image();img.src=`./dodo-assets/${key}.webp`;
+    }
+    frame('idle',0);updateHint();reevaluate();
+  }).catch(err=>console.warn('Dodo could not load:',err));
 })();

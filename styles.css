@@ -200,3 +200,8 @@ html{-webkit-tap-highlight-color:transparent}
 @media(max-width:760px){.home-intro{margin:18px 0 25px}.home-intro-row{gap:6px}.home-intro-row h1{font-size:clamp(38px,9.3vw,68px);letter-spacing:-1.8px;white-space:nowrap}.dodo-home{width:clamp(108px,28vw,130px);height:clamp(100px,26vw,120px);border-radius:19px}}
 @media(max-width:365px){.home-intro-row h1{font-size:36px}.dodo-home{width:104px;height:98px}}
 @media(prefers-reduced-motion:reduce){.dodo-home-character{transition:none!important}}
+
+/* Dodo home V2: helpful, quiet hints; browser focus remains keyboard-accessible. */
+.dodo-home-hint{position:absolute;z-index:3;left:50%;bottom:5px;transform:translateX(-50%);white-space:nowrap;border-radius:99px;padding:3px 7px;background:rgba(255,253,247,.90);color:#516c56;font-size:10px;font-weight:750;line-height:1.2;letter-spacing:0;pointer-events:none;box-shadow:0 1px 4px #536a481a;transition:opacity .2s ease}
+.dodo-home-hint.is-away{background:rgba(255,253,247,.95);color:#4c6e58}
+@media(prefers-reduced-motion:reduce){.dodo-home-hint{transition:none}}

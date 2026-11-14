@@ -1,8 +1,23 @@
-Our Space — hide zero-count inbox categories
+OUR SPACE — DODO HOME V2
 
-Replace ONLY app.js in your GitHub Pages repository with the enclosed app.js.
-Keep index.html, styles.css, firestore.rules and Firebase data unchanged.
+Built from your verified working pre-Dodo baseline plus the corrected Dodo integration.
 
-At a glance and other features are preserved. On the homepage, Your Inbox shows only notification categories with counts above zero. If nothing is pending, it reads: All caught up — nothing new right now.
+Replace ONLY these GitHub files:
+  index.html
+  styles.css
+  dodo-home.js
 
-This is based on the previous kiss connection hotfix version of app.js.
+LEAVE AS THEY ARE:
+  app.js
+  dodo-assets folder
+  firestore.rules / Firebase rules
+
+Changes:
+- Dodo loops his gentle sway idle animation while visible, instead of freezing.
+- He usually wanders away about 25–40 seconds after returning, stays away around 10–17 seconds.
+- When he is home: a discreet 'Tap me!' label. When away: '🔔 Call me back'.
+- Tapping the empty scene brings him back; tapping him triggers peck, jump or squawk.
+- Stops all animation while app/tab is hidden or scene isn't in viewport.
+- Honours reduced-motion preferences.
+
+Please verify on your live GitHub Pages site; no live Firebase test was performed.
