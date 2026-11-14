@@ -31,11 +31,11 @@
     home.classList.toggle('is-returning',returning);
     hint.classList.toggle('is-away',exploring);
     if(returning){
-      hint.textContent='On my way!';
+      hint.textContent='Call me back';
       home.setAttribute('aria-label','Dodo is walking back');
     }else if(exploring){
-      hint.textContent=summoned?'Coming back…':'Call me back';
-      home.setAttribute('aria-label','Ring the bell to call Dodo back');
+      hint.textContent='Call me back';
+      home.setAttribute('aria-label','Tap to call Dodo back');
     }else{
       hint.textContent='Tap me!';
       home.setAttribute('aria-label','Tap Dodo for a reaction');
@@ -112,7 +112,7 @@
     if(!away)return;
     summoned=true;
     cancel();mode='called';updateHint();
-    // A distinct half-second beat to make the bell feel like a call.
+    // A brief half-second beat before the Dodo walks back in.
     later(walkIn,500);
   }
   function react(){if(!active)return;away=false;position(0);
