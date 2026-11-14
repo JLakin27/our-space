@@ -160,25 +160,17 @@ body.trip-map-fullscreen{overflow:hidden}
 .music-delete-error{color:#a23c36!important;font-size:12px;min-height:0;margin:8px 0 0!important}
 .music-player-actions[hidden],.music-delete-track[hidden]{display:none!important}
 
-/* A small, one-off kiss-opening moment. All movement is decorative. */
-.kiss-celebration-backdrop{z-index:2300;background:#2a2627b8}
-.kiss-celebration-modal{text-align:center;max-width:370px;padding:29px 24px 24px;overflow:hidden;background:linear-gradient(180deg,#fff5f2,#fff)}
-.kiss-celebration-modal h2{font-family:Outfit,sans-serif;letter-spacing:0;font-size:30px;margin:0}
-.kiss-celebration-modal p{font-size:13px;color:#8e7b76;margin:8px 0 22px}
-.kiss-scene{position:relative;height:178px;display:grid;place-items:center;isolation:isolate}
-.kiss-big{font-size:69px;line-height:1;opacity:1;transform:scale(1)}
-.kiss-happy{position:absolute;font-size:66px;opacity:0;transform:scale(.65)}
-.kiss-heart{position:absolute;font-size:22px;opacity:0;pointer-events:none}
-.kiss-heart-one{top:55px;left:30%}.kiss-heart-two{top:28px;left:52%}.kiss-heart-three{top:66px;left:66%}
-.kiss-animate .kiss-big{animation:kiss-pop 1.7s ease forwards}
-.kiss-animate .kiss-happy{animation:kiss-smile 1.7s ease forwards}
-.kiss-animate .kiss-heart-one{animation:kiss-float-a 1.7s ease-out forwards}
-.kiss-animate .kiss-heart-two{animation:kiss-float-b 1.7s ease-out forwards}
-.kiss-animate .kiss-heart-three{animation:kiss-float-c 1.7s ease-out forwards}
-.kiss-done{width:100%;padding:12px 20px;border-radius:12px}
-@keyframes kiss-pop{0%{transform:scale(.5);opacity:0}22%{transform:scale(1.18);opacity:1}43%{transform:scale(1)}60%{opacity:1}78%,100%{transform:scale(.78);opacity:0}}
-@keyframes kiss-smile{0%,60%{opacity:0;transform:scale(.65)}78%{opacity:1;transform:scale(1.12)}100%{opacity:1;transform:scale(1)}}
-@keyframes kiss-float-a{0%,20%{opacity:0;transform:translate(0,15px) scale(.5)}37%{opacity:1}78%,100%{opacity:0;transform:translate(-25px,-65px) scale(1.2)}}
-@keyframes kiss-float-b{0%,24%{opacity:0;transform:translate(0,15px) scale(.5)}44%{opacity:1}85%,100%{opacity:0;transform:translate(13px,-75px) scale(1.1)}}
-@keyframes kiss-float-c{0%,30%{opacity:0;transform:translate(0,15px) scale(.5)}48%{opacity:1}90%,100%{opacity:0;transform:translate(28px,-52px) scale(1.1)}}
-@media(prefers-reduced-motion:reduce){.kiss-animate .kiss-big,.kiss-animate .kiss-heart,.kiss-animate .kiss-happy{animation:none}.kiss-animate .kiss-big,.kiss-animate .kiss-heart{opacity:0}.kiss-animate .kiss-happy{opacity:1;transform:none}}
+
+/* Our Dodo: a tiny home beside the homepage greeting, never floating over controls. */
+.home-intro-row{display:flex;align-items:center;justify-content:space-between;gap:16px;min-width:0}
+.home-intro-row h1{flex:1;min-width:0;margin:10px 0}
+.dodo-home{position:relative;display:block;flex:none;width:clamp(108px,12vw,144px);height:clamp(100px,10.5vw,125px);padding:0;border:1px solid #e2e4d6;border-radius:20px;background:linear-gradient(165deg,#f4f1e5 5%,#e8eee0 76%);overflow:hidden;cursor:pointer;isolation:isolate;touch-action:manipulation;box-shadow:0 4px 16px #46573b0a}
+.dodo-home:focus-visible{outline:3px solid #8cb49a;outline-offset:3px}
+.dodo-home-sun{position:absolute;top:11px;right:13px;width:18px;height:18px;background:#f1ddb0;border-radius:50%;opacity:.85}
+.dodo-home-hill{position:absolute;left:-16%;right:-16%;height:36%;bottom:-15%;background:#d5e3cd;border-radius:50% 50% 0 0}
+.dodo-home-shadow{position:absolute;left:50%;bottom:10%;width:46%;height:8%;transform:translateX(-50%);background:#728b7640;border-radius:50%;filter:blur(4px);pointer-events:none}
+.dodo-home-character{position:absolute;inset:0;display:block;will-change:auto;pointer-events:none}
+.dodo-home-sprite{display:block;width:100%;height:100%;background-repeat:no-repeat;background-position:0 0;pointer-events:none}
+@media(max-width:760px){.home-intro{margin:18px 0 25px}.home-intro-row{gap:6px}.home-intro-row h1{font-size:clamp(38px,9.3vw,68px);letter-spacing:-1.8px;white-space:nowrap}.dodo-home{width:clamp(108px,28vw,130px);height:clamp(100px,26vw,120px);border-radius:19px}}
+@media(max-width:365px){.home-intro-row h1{font-size:36px}.dodo-home{width:104px;height:98px}}
+@media(prefers-reduced-motion:reduce){.dodo-home-character{transition:none!important}}
