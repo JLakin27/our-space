@@ -9,7 +9,7 @@
   if(!home||!sprite||!character||!hint||!view)return;
 
   const reduce=matchMedia('(prefers-reduced-motion: reduce)');
-  const timing={idle:76,idle_look_at_camera:86,walk:55,peck:55,jump:65,squawk:60,whacked:62,die:115};
+  const timing={idle:76,idle_look_at_camera:86,walk:55,peck:55,jump:65,squawk:60,whacked:62,die:60};
   const rand=(min,max)=>min+Math.random()*(max-min);
   const pick=list=>list[Math.floor(Math.random()*list.length)];
   const art={};let ready=false,active=false,inViewport=false,away=false,mode='stopped';
