@@ -347,3 +347,14 @@ body.dodo-world-opened .dodo-home-character{visibility:hidden}
   .dodo-world-sun{top:7%}
 }
 @media(max-width:380px){.dodo-world-barn{left:73%;width:clamp(168px,55vw,198px)}.dodo-world-bird{width:clamp(160px,53vw,195px)}.dodo-world-food{left:28%}}
+
+
+/* CINEMATIC DODO INTRO — a self-contained overlay; nothing in other app views changes. */
+.cinematic-intro[hidden]{display:none!important}
+.cinematic-intro{position:fixed;inset:0;inset:0 0 0 0;z-index:6000;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#a5c5df;opacity:1;transition:opacity .55s ease}
+.cinematic-intro.is-ending{opacity:0;pointer-events:none}
+.cinematic-intro-video{display:block;width:100%;height:100%;object-fit:cover;object-position:center center;background:#a5c5df}
+.cinematic-intro-skip{position:absolute;top:max(20px,env(safe-area-inset-top));right:max(20px,env(safe-area-inset-right));border:1px solid #ffffff91;border-radius:100px;background:#26352c99;color:white;font:700 13px 'DM Sans',sans-serif;letter-spacing:.2px;padding:11px 17px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);cursor:pointer;box-shadow:0 3px 16px #0002;z-index:2;-webkit-tap-highlight-color:transparent}
+.cinematic-intro-skip:focus-visible{outline:3px solid #fff;outline-offset:3px}
+body.cinematic-intro-playing{overflow:hidden}
+@media(prefers-reduced-motion:reduce){.cinematic-intro{transition:none}}

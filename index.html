@@ -166,4 +166,11 @@
   </section>
 </div>
 <script src="./dodo-world.js" defer></script>
-<script src="./dodo-home.js" defer></script></body></html>
+<script src="./dodo-home.js" defer></script>
+<!-- Play only AFTER Firebase confirms an allowlisted signed-in account. -->
+<div id="cinematic-intro" class="cinematic-intro" hidden role="dialog" aria-modal="true" aria-label="Dodo's welcome animation">
+  <video id="cinematic-intro-video" class="cinematic-intro-video" playsinline webkit-playsinline muted preload="none" aria-label="Dodo runs into the meadow to welcome you"></video>
+  <button type="button" class="cinematic-intro-skip" id="cinematic-intro-skip" aria-label="Skip welcome animation">Skip <span aria-hidden="true">↗</span></button>
+</div>
+<script src="./cinematic-intro.js" defer></script>
+</body></html>
