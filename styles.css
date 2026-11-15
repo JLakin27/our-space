@@ -280,3 +280,40 @@ body.dodo-world-opened{overflow:hidden}
 @media(prefers-reduced-motion:reduce){.dodo-world-balloon,.dodo-world-sun,.dodo-world-open{transition:none!important}}
 /* There is one Dodo: hide his homepage incarnation while the larger world is open. */
 body.dodo-world-opened .dodo-home-character{visibility:hidden}
+
+
+/* Dodo World V3: portrait layout and unobtrusive interactions */
+.dodo-world-sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.dodo-world-scene{--dodo-ground:clamp(35px,8%,78px)}
+.dodo-world-field{inset:68% -5% 0}
+.dodo-world-barn{bottom:var(--dodo-ground);z-index:3}
+.dodo-world-bird{bottom:var(--dodo-ground);z-index:6}
+.dodo-world-food{bottom:calc(var(--dodo-ground) + 18px);background:#fff4d8eb;width:48px;height:42px;border:1px solid #dec895;box-shadow:0 5px 10px #36452930;font-size:25px;z-index:7;transition:transform .18s}
+.dodo-world-food:hover{transform:scale(1.07)}
+.dodo-world-sun{right:14%;top:12%;z-index:4}
+.dodo-world-balloon{top:22%;left:30%;z-index:4;filter:drop-shadow(0px 3px 2px #425b5633)}
+/* A noticeable sunset transformation instead of a barely visible colour change. */
+.dodo-world-scene.is-sunny{background:linear-gradient(180deg,#f7a990 0%,#fad4a9 39%,#f2dca5 68%,#a6c67c 100%)}
+.dodo-world-scene.is-sunny .dodo-world-sun{background:#ffd06c;box-shadow:0 0 0 20px #ffdf9450,0 0 85px 28px #ffbd6b88;transform:translateY(18px) scale(.95)}
+.dodo-world-scene.is-sunny .dodo-world-cloud{background:#fff2dda9;box-shadow:30px -10px 0 2px #fff2dda9,62px 2px 0 -4px #fff2dda9}
+.dodo-world-scene.is-sunny .dodo-world-far-hills{background:#c4b59e}
+.dodo-world-scene.is-sunny .dodo-world-near-hills{background:#aabb80}
+.dodo-world-scene.is-sunny .dodo-world-field{background:linear-gradient(170deg,#b0c67b,#98b777 55%,#8caa69)}
+@media(max-width:620px){
+  .dodo-world-panel{height:100dvh}
+  .dodo-world-header{padding:13px 17px;flex:0 0 auto}
+  .dodo-world-scene{--dodo-ground:clamp(48px,9%,75px);flex:1;min-height:0;max-height:none;aspect-ratio:auto}
+  /* The field starts high enough to give Dodo a clear playable foreground. */
+  .dodo-world-field{inset:58% -5% 0}
+  .dodo-world-far-hills{inset:37% -10% 0}
+  .dodo-world-near-hills{inset:48% -10% 0}
+  /* The barn's *door* sits at the same visual ground level as the sprite's feet. */
+  .dodo-world-barn{left:74%;width:clamp(112px,36%,155px);bottom:calc(var(--dodo-ground) - 50px);z-index:3}
+  .dodo-world-bird{width:clamp(115px,36%,155px);bottom:var(--dodo-ground);z-index:6}
+  .dodo-world-flowers{bottom:5%;font-size:17px}
+  .dodo-world-food{left:17%;bottom:calc(var(--dodo-ground) + 12px);width:48px;height:42px}
+  .dodo-world-sun{top:9%;right:12%;width:clamp(54px,15vw,72px)}
+  .dodo-world-balloon{top:18%;left:16%;width:65px;height:103px;transform:scale(.83);transform-origin:top left}
+  .dodo-world-balloon.is-floating{transform:translate3d(38px,-45px,0) rotate(8deg) scale(.83)}
+}
+@media(max-width:380px){.dodo-world-barn{left:76%;width:112px}.dodo-world-bird{width:118px}.dodo-world-balloon{left:11%}}

@@ -1,13 +1,12 @@
-DODO WORLD V2 — install over V1
+DODO WORLD V3 — portrait layout corrections
 
-Replace these files in the ROOT of your GitHub Pages repository:
+Replace in the ROOT of your GitHub Pages repository:
   index.html
   styles.css
   dodo-world.js
-  dodo-home.js
 
-Leave app.js, sprite JSON files, WebP assets and Firebase rules unchanged.
+Leave all others (app.js, dodo-home.js, sprite JSON, dodo-assets and Firebase) unchanged.
 
-Changes: Dodo ground-level barn position, bird in front of barn, more left/right facing, sun and hot-air balloon controls, snack action, home mascot pauses during expanded world, world RAF pauses when closed/hidden, removed header/footer tagline, clearer Visit his world button.
+V3: Lower barn aligned to mobile Dodo walking plane; more visible sun/sunset and balloon in portrait; food represented by a small clickable cheese treat without a label; no visible footer instructions or status updates; Dodo walks to actual barn and treat coordinates rather than desktop-only fixed x coordinates.
 
-Note: dodo-home.js is included because its visibility logic needs to pause while Dodo World is open. The world scripts never save to Firebase.
+No backend/Firebase changes.

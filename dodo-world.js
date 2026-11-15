@@ -76,25 +76,29 @@
     const reaction=choose(['jump','peck','squawk','whacked']);
     animate(reaction,art[reaction].frameCount*rates[reaction],idle);
   }
+  function positionOf(element){
+    const bounds=element.getBoundingClientRect(),field=scene.getBoundingClientRect();
+    return Math.max(7,Math.min(93,((bounds.left+bounds.width/2-field.left)/field.width)*100));
+  }
   function goToBarn(){
     if(!visible||!loaded)return;
     if(asleep){wake();return;}
     reset();state='going-to-barn';caption.textContent='Off to his little barn…';
     if(motion.matches){fallAsleep();return;}
-    const to=72;const duration=Math.max(420,Math.abs(to-x)/42*1000);
+    const to=positionOf(barn);const duration=Math.max(420,Math.abs(to-x)/42*1000);
     animate('walk',duration,fallAsleep,{from:x,to});
     state='going-to-barn';
   }
   function fallAsleep(){reset();asleep=true;state='sleeping';bird.classList.add('is-sleeping');barn.classList.add('is-sleeping');barn.setAttribute('aria-label','Wake Dodo up');caption.textContent='Shhh… Dodo is having a little nap. Tap the barn to wake him.';}
   function wake(){
     reset();asleep=false;bird.classList.remove('is-sleeping');barn.classList.remove('is-sleeping');barn.setAttribute('aria-label','Send Dodo to his barn to sleep');
-    setX(72);setFacing('left');draw('idle',0);caption.textContent='Up you get, sleepy Dodo!';
+    const door=positionOf(barn);setX(door);setFacing('left');draw('idle',0);caption.textContent='Up you get, sleepy Dodo!';
     if(motion.matches){idle();return;}
-    schedule(()=>animate('walk',780,idle,{from:72,to:48}),450);
+    schedule(()=>animate('walk',780,idle,{from:door,to:48}),450);
   }
   function feed(){
     if(!visible||!loaded||asleep)return;
-    const target=22;
+    const target=positionOf(food);
     caption.textContent='Dodo spotted a snack!';
     if(motion.matches){setX(target);draw('peck',0);return;}
     const duration=Math.max(430,Math.abs(target-x)/78*1000);
