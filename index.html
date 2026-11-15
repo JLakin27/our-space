@@ -21,6 +21,7 @@
       <button class="nav-link" data-section="places">✧ <span>Our places to 😈</span></button>
       <button class="nav-link" data-section="music">♫ <span>Our music 🎧</span></button>
       <div class="sidebar-soon" aria-disabled="true">＋ <span>More coming soon...</span></div>
+      <button type="button" class="cinematic-intro-replay" id="cinematic-intro-replay" title="Replay Dodo’s cinematic welcome">🎬 <span>Replay Dodo intro</span> <small>TEST</small></button>
     </nav>
     <footer class="sidebar-footer"><span id="identity">Local preview</span><button id="sign-out" hidden>Sign out ↗</button></footer>
   </aside>
@@ -169,8 +170,16 @@
 <script src="./dodo-home.js" defer></script>
 <!-- Play only AFTER Firebase confirms an allowlisted signed-in account. -->
 <div id="cinematic-intro" class="cinematic-intro" hidden role="dialog" aria-modal="true" aria-label="Dodo's welcome animation">
-  <video id="cinematic-intro-video" class="cinematic-intro-video" playsinline webkit-playsinline muted preload="none" aria-label="Dodo runs into the meadow to welcome you"></video>
-  <button type="button" class="cinematic-intro-skip" id="cinematic-intro-skip" aria-label="Skip welcome animation">Skip <span aria-hidden="true">↗</span></button>
+  <div class="cinematic-intro-layout" id="cinematic-intro-layout">
+    <div class="cinematic-intro-heading" id="cinematic-intro-heading">
+      <div class="cinematic-intro-eyebrow">WELCOME TO</div>
+      <div class="cinematic-intro-wordmark">Our space<span>.</span></div>
+    </div>
+    <div class="cinematic-intro-card" id="cinematic-intro-card">
+      <video id="cinematic-intro-video" class="cinematic-intro-video" playsinline webkit-playsinline muted preload="none" aria-label="Dodo runs into the meadow to welcome you"></video>
+    </div>
+    <button type="button" class="cinematic-intro-skip" id="cinematic-intro-skip" aria-label="Skip welcome animation">Skip <span aria-hidden="true">↗</span></button>
+  </div>
 </div>
 <script src="./cinematic-intro.js" defer></script>
 </body></html>

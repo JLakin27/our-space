@@ -349,12 +349,36 @@ body.dodo-world-opened .dodo-home-character{visibility:hidden}
 @media(max-width:380px){.dodo-world-barn{left:73%;width:clamp(168px,55vw,198px)}.dodo-world-bird{width:clamp(160px,53vw,195px)}.dodo-world-food{left:28%}}
 
 
-/* CINEMATIC DODO INTRO — a self-contained overlay; nothing in other app views changes. */
+/* CINEMATIC DODO — branded app opening with a measured landing into Dodo's home. */
 .cinematic-intro[hidden]{display:none!important}
-.cinematic-intro{position:fixed;inset:0;inset:0 0 0 0;z-index:6000;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#a5c5df;opacity:1;transition:opacity .55s ease}
-.cinematic-intro.is-ending{opacity:0;pointer-events:none}
-.cinematic-intro-video{display:block;width:100%;height:100%;object-fit:cover;object-position:center center;background:#a5c5df}
-.cinematic-intro-skip{position:absolute;top:max(20px,env(safe-area-inset-top));right:max(20px,env(safe-area-inset-right));border:1px solid #ffffff91;border-radius:100px;background:#26352c99;color:white;font:700 13px 'DM Sans',sans-serif;letter-spacing:.2px;padding:11px 17px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);cursor:pointer;box-shadow:0 3px 16px #0002;z-index:2;-webkit-tap-highlight-color:transparent}
-.cinematic-intro-skip:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.cinematic-intro{position:fixed;inset:0;z-index:6000;display:grid;place-items:center;overflow:hidden;background:#f8f7f3;isolation:isolate;opacity:1;transition:background-color .72s ease,opacity .32s ease}
+.cinematic-intro-layout{width:min(100% - 42px,980px);height:min(100dvh - 42px,760px);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px}
+.cinematic-intro-heading{text-align:center;flex:none;transition:opacity .24s ease,transform .35s ease}
+.cinematic-intro-eyebrow{font:800 10px 'DM Sans',sans-serif;color:#d78a6c;letter-spacing:2.4px;margin-bottom:6px}
+.cinematic-intro-wordmark{font:700 clamp(32px,5vw,48px)/1.12 Outfit,'DM Sans',sans-serif;color:#33332f;letter-spacing:-1.6px}
+.cinematic-intro-wordmark span{color:#dd8b6c}
+.cinematic-intro-card{position:relative;width:min(100%,860px);aspect-ratio:16/9;max-height:min(66dvh,510px);overflow:hidden;isolation:isolate;background:#dae9dd;border:1px solid #e2e4d6;border-radius:25px;box-shadow:0 22px 72px #55554722;flex:none;will-change:top,left,width,height,border-radius,opacity}
+.cinematic-intro-video{display:block;width:100%;height:100%;object-fit:cover;object-position:center;background:#c7ded3}
+.cinematic-intro-skip{position:absolute;right:0;top:0;border:1px solid #e8e2d9;background:#fffdfb;color:#8d7d71;border-radius:100px;font:700 12px 'DM Sans',sans-serif;padding:10px 16px;cursor:pointer;box-shadow:0 3px 14px #2d2d2510;-webkit-tap-highlight-color:transparent;transition:opacity .2s}
+.cinematic-intro-skip:focus-visible,.cinematic-intro-replay:focus-visible{outline:3px solid #94ba9e;outline-offset:3px}
+.cinematic-intro-replay{margin:8px 14px 0;width:calc(100% - 28px);display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px dashed #dfd5c8;border-radius:12px;background:#fffaf4;color:#8a6a5b;text-align:left;font-size:12px;font-weight:750}
+.cinematic-intro-replay span{flex:1}
+.cinematic-intro-replay small{font-size:9px;color:#b48e79;letter-spacing:.55px}
+.cinematic-intro-replay:hover{background:#fff2e6}
 body.cinematic-intro-playing{overflow:hidden}
-@media(prefers-reduced-motion:reduce){.cinematic-intro{transition:none}}
+body.cinematic-intro-playing .dodo-home-character{visibility:hidden!important}
+body.cinematic-intro-playing .dodo-home-hint{visibility:hidden!important}
+/* During the card's landing, reveal the actual app beneath the veil. */
+.cinematic-intro.is-landing{background:transparent;pointer-events:none}
+.cinematic-intro.is-landing .cinematic-intro-heading{opacity:0;transform:translateY(-9px)}
+.cinematic-intro.is-landing .cinematic-intro-skip{opacity:0;pointer-events:none}
+.cinematic-intro.is-landing .cinematic-intro-card{box-shadow:0 4px 16px #46573b0a;transition:top .83s cubic-bezier(.22,1,.36,1),left .83s cubic-bezier(.22,1,.36,1),width .83s cubic-bezier(.22,1,.36,1),height .83s cubic-bezier(.22,1,.36,1),border-radius .83s cubic-bezier(.22,1,.36,1),box-shadow .83s ease}
+.cinematic-intro.is-vanishing .cinematic-intro-card{opacity:0;transition:opacity .18s ease}
+@media(max-width:760px){
+  .cinematic-intro-layout{width:min(100% - 26px,470px);height:min(100dvh - 36px,860px);gap:18px}
+  .cinematic-intro-card{width:min(100%,390px);aspect-ratio:9/16;max-height:min(72dvh,700px);border-radius:22px;box-shadow:0 16px 46px #5555471e}
+  .cinematic-intro-heading{align-self:flex-start;text-align:left;padding-left:4px}
+  .cinematic-intro-skip{top:4px;right:2px}
+}
+@media(max-height:570px) and (orientation:landscape){.cinematic-intro-layout{gap:8px;height:calc(100dvh - 14px)}.cinematic-intro-heading{position:absolute;left:0;top:4px;z-index:2}.cinematic-intro-wordmark{font-size:25px}.cinematic-intro-eyebrow{font-size:8px}.cinematic-intro-card{max-height:84dvh;max-width:64vw}.cinematic-intro-skip{top:5px}}
+@media(prefers-reduced-motion:reduce){.cinematic-intro,.cinematic-intro-card,.cinematic-intro-heading{transition:none!important}}
