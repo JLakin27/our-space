@@ -1,21 +1,20 @@
-Our Space – Dodo refinements (15 November 2026)
+DODO + AUTH REFRESH FIX — 15 November 2026
 
-Built directly from the user-provided current GitHub export.
+Replace ONLY the following four root-level files on GitHub:
+- index.html
+- styles.css
+- app.js
+- dodo-home.js
 
-REPLACE in GitHub root:
-  index.html
-  styles.css
-  dodo-home.js
+Leave dodo-assets, sprites.json, other files, and Firebase rules alone.
 
-REPLACE in GitHub dodo-assets/ folder:
-  sprites.json
+Changes:
+1. Removed die/fall-down from the Dodo reaction selection and preload. No asset deletion required.
+2. The login modal is hidden by default, so it does not flash when refreshing an authenticated session.
+3. A neutral Opening Our Space... screen conceals the homepage until Firebase finishes checking auth.
+4. On confirmed sign-out or an expired session, the login form appears with its existing heavy background blur.
+5. In Local preview, the neutral loading screen is removed immediately.
 
-ADD to GitHub dodo-assets/ folder:
-  whacked.webp
-  die.webp
+app.js IS part of this update, unlike previous Dodo-only fixes. It has ONLY minimal changes to authentication visibility handling. All other app logic is unchanged.
 
-LEAVE EVERYTHING ELSE UNCHANGED: app.js, existing sprite sheets, Firebase rules, and all other files.
-
-Changes: Login starts covered (no Dodo peek), background blurred behind dialog; interaction hints now below the Dodo home; whacked and die/fall-down added as additional tap reactions.
-
-Note: The die reaction plays once and returns to idle. Dodo animations start after the auth dialog is hidden. No Firebase changes.
+Verify by refreshing while signed in (no login flash), signing out (login shows), signing back in (homepage shows), and tapping the Dodo (only peck/jump/squawk/whacked).

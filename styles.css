@@ -213,3 +213,9 @@ body:has(#auth-modal:not([hidden])) .shell{filter:blur(20px);pointer-events:none
 body:has(#auth-modal:not([hidden])){overflow:hidden}
 /* While the sign-in dialog is visible, retain an opaque translucent veil. */
 #auth-modal.backdrop{background:rgba(248,247,243,.83);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+
+/* Keep both the login form and private homepage out of sight until Firebase
+   resolves the existing sign-in session. No login flash on normal refresh. */
+body.auth-pending .shell{visibility:hidden}
+body.auth-pending #auth-modal{display:none!important}
+body.auth-pending::after{content:"Opening Our Space…";position:fixed;inset:0;z-index:4000;display:grid;place-items:center;background:#f8f7f3;color:#9a8d80;font:600 13px 'DM Sans',sans-serif;letter-spacing:.25px}
