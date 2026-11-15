@@ -54,5 +54,21 @@
     "rows": 2,
     "frameWidth": 525,
     "frameHeight": 522
+  },
+  "whacked": {
+    "src": "./whacked.webp",
+    "frameCount": 16,
+    "columns": 4,
+    "rows": 4,
+    "frameWidth": 525,
+    "frameHeight": 522
+  },
+  "die": {
+    "src": "./die.webp",
+    "frameCount": 5,
+    "columns": 4,
+    "rows": 2,
+    "frameWidth": 525,
+    "frameHeight": 522
   }
 }

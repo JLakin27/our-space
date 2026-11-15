@@ -201,67 +201,15 @@ html{-webkit-tap-highlight-color:transparent}
 @media(max-width:365px){.home-intro-row h1{font-size:36px}.dodo-home{width:104px;height:98px}}
 @media(prefers-reduced-motion:reduce){.dodo-home-character{transition:none!important}}
 
-/* Dodo home V2: helpful, quiet hints; browser focus remains keyboard-accessible. */
-.dodo-home-hint{position:absolute;z-index:3;left:50%;bottom:5px;transform:translateX(-50%);white-space:nowrap;border-radius:99px;padding:3px 7px;background:rgba(255,253,247,.90);color:#516c56;font-size:10px;font-weight:750;line-height:1.2;letter-spacing:0;pointer-events:none;box-shadow:0 1px 4px #536a481a;transition:opacity .2s ease}
-.dodo-home-hint.is-away{background:rgba(255,253,247,.95);color:#4c6e58}
-@media(prefers-reduced-motion:reduce){.dodo-home-hint{transition:none}}
-
-/* Dodo Home V3: angled interaction ribbon above the bird, never over his feet. */
-.dodo-home-hint{
-  top:7px;right:-10px;bottom:auto;left:auto;
-  transform:rotate(17deg);transform-origin:center;
-  padding:3px 13px;min-width:67px;text-align:center;
-  border-radius:3px;background:#fffdf3ed;color:#516c56;
-  font-size:9px;letter-spacing:.05px;
-  box-shadow:0 1px 5px #50604416;
-}
-.dodo-home-hint.is-away{
-  top:auto;right:50%;bottom:8px;left:auto;
-  transform:translateX(50%);padding:3px 8px;
-  border-radius:99px;min-width:0;
-  background:#fffdf5f2;white-space:nowrap;
-}
-.dodo-home.is-away::after{
-  content:'🔔';position:absolute;z-index:3;
-  left:50%;top:47%;transform:translate(-50%,-50%);
-  font-size:24px;pointer-events:none;
-  filter:drop-shadow(0 1px 2px #52614a22);
-}
-.dodo-home.is-returning .dodo-home-hint{
-  top:7px;bottom:auto;right:-10px;left:auto;
-  transform:rotate(17deg);
-}
-/* Keep the sun away from the corner label. */
-.dodo-home-sun{top:13px;right:auto;left:12px}
-
-
-/* Dodo Home V4: one true clipped corner ribbon; no bell or extra statuses. */
-.dodo-home-hint,
-.dodo-home-hint.is-away,
-.dodo-home.is-returning .dodo-home-hint{
-  position:absolute;
-  top:18px;
-  right:-39px;
-  bottom:auto;
-  left:auto;
-  width:130px;
-  min-width:0;
-  box-sizing:border-box;
-  border-radius:0;
-  padding:4px 0;
-  transform:rotate(45deg);
-  transform-origin:center center;
-  background:#fffdf3;
-  color:#516c56;
-  box-shadow:0 2px 5px #50604413;
-  font-size:10px;
-  font-weight:750;
-  line-height:1.15;
-  text-align:center;
-  white-space:nowrap;
-  pointer-events:none;
-}
-/* The box clips the offscreen ends, so no rectangular ribbon corners show. */
-.dodo-home.is-away::after{content:none;display:none}
-/* Keep the corner unobtrusive while Dodo is actually walking back. */
-.dodo-home.is-returning .dodo-home-hint{opacity:0}
+/* Dodo's home: small hint sits BELOW the clipped scene, never over the bird. */
+.dodo-home-wrap{display:flex;flex:none;flex-direction:column;align-items:center;width:clamp(108px,12vw,144px);gap:4px}
+.dodo-home-wrap .dodo-home{width:100%;flex:none}
+.dodo-home-hint{position:static;display:block;width:100%;min-height:12px;text-align:center;color:#778377;font-size:10px;font-weight:700;line-height:1.2;letter-spacing:.1px;white-space:nowrap;pointer-events:none;user-select:none}
+.dodo-home.is-returning + .dodo-home-hint{visibility:hidden}
+@media(max-width:760px){.dodo-home-wrap{width:clamp(108px,28vw,130px)}}
+@media(max-width:365px){.dodo-home-wrap{width:104px}}
+/* Keep the app concealed until Firebase confirms sign-in. */
+body:has(#auth-modal:not([hidden])) .shell{filter:blur(20px);pointer-events:none;user-select:none}
+body:has(#auth-modal:not([hidden])){overflow:hidden}
+/* While the sign-in dialog is visible, retain an opaque translucent veil. */
+#auth-modal.backdrop{background:rgba(248,247,243,.83);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}

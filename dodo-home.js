@@ -9,7 +9,7 @@
   if(!home||!sprite||!character||!hint||!view)return;
 
   const reduce=matchMedia('(prefers-reduced-motion: reduce)');
-  const timing={idle:76,idle_look_at_camera:86,walk:55,peck:55,jump:65,squawk:60};
+  const timing={idle:76,idle_look_at_camera:86,walk:55,peck:55,jump:65,squawk:60,whacked:62,die:115};
   const rand=(min,max)=>min+Math.random()*(max-min);
   const pick=list=>list[Math.floor(Math.random()*list.length)];
   const art={};let ready=false,active=false,inViewport=false,away=false,mode='stopped';
@@ -41,7 +41,7 @@
       home.setAttribute('aria-label','Tap Dodo for a reaction');
     }
   }
-  function playable(){return ready&&!document.hidden&&!view.hidden&&home.getClientRects().length>0&&inViewport;}
+  function playable(){return ready&&document.getElementById('auth-modal')?.hidden===true&&!document.hidden&&!view.hidden&&home.getClientRects().length>0&&inViewport;}
   function stop(){cancel();active=false;mode='stopped';}
 
   // Continuous, gentle idle movement when he's home (not a static base frame).
@@ -116,7 +116,7 @@
     later(walkIn,500);
   }
   function react(){if(!active)return;away=false;position(0);
-    play(pick(['peck','jump','squawk']),()=>{if(!active)return;departureAt=Date.now()+rand(25000,40000);idle();});
+    play(pick(['peck','jump','squawk','whacked','die']),()=>{if(!active)return;departureAt=Date.now()+rand(25000,40000);idle();});
   }
   function begin(){if(!playable()||active)return;active=true;away=false;summoned=false;position(0);
     if(reduce.matches){cancel();mode='static';frame('idle',0);updateHint();return;}
@@ -136,12 +136,13 @@
   document.addEventListener('visibilitychange',reevaluate);
   reduce.addEventListener?.('change',()=>{stop();reevaluate();});
   new MutationObserver(reevaluate).observe(view,{attributes:true,attributeFilter:['hidden']});
+  new MutationObserver(reevaluate).observe(document.getElementById('auth-modal'),{attributes:true,attributeFilter:['hidden']});
   const observer=new IntersectionObserver(entries=>{inViewport=entries[0]?.isIntersecting??false;reevaluate();},{threshold:.08});
   observer.observe(home);
   fetch('./dodo-assets/sprites.json').then(r=>{if(!r.ok)throw Error('Missing dodo sprites');return r.json();}).then(data=>{
     Object.assign(art,data);ready=true;
     // Load only the few animation sheets used here.
-    for(const key of ['idle','idle_look_at_camera','walk','peck','jump','squawk']){
+    for(const key of ['idle','idle_look_at_camera','walk','peck','jump','squawk','whacked','die']){
       const img=new Image();img.src=`./dodo-assets/${key}.webp`;
     }
     frame('idle',0);updateHint();reevaluate();
