@@ -28,7 +28,7 @@
   <main class="main">
     <header class="topbar"><div><button id="open-sidebar" class="menu-btn" aria-label="Open menu">☰</button><span id="page-eyebrow" class="eyebrow">OUR WEBSITE</span></div><div class="top-right"><button class="notifications" id="notifications-btn" aria-label="View pending suggestions">🔔 <span id="notifications-count">0</span></button><span class="online"><i id="status-dot"></i><span id="sync-status">Connecting</span></span><div class="header-profiles" aria-label="Your profiles"><button id="other-profile-button" class="profile-chip" hidden type="button" aria-label="View Noémie's profile"><span class="profile-chip-avatar" id="other-avatar" style="--avatar-colour:#f7d76b">🦤<span class="profile-chip-status" id="other-status" hidden></span></span><span class="profile-chip-name" id="other-profile-name">Noémie</span></button><button id="own-profile-button" class="profile-chip" hidden type="button" aria-label="Edit your profile"><span class="profile-chip-avatar" id="own-avatar" style="--avatar-colour:#b9dccb">🦊<span class="profile-chip-status" id="own-status" hidden></span></span><span class="profile-chip-name" id="own-profile-name">Joe</span></button></div><button id="mobile-sign-out" class="mobile-signout" hidden aria-label="Sign out" title="Sign out">↪</button></div></header>
     <div class="content">
-      <section id="home-view" class="view"><div class="home-intro"><div class="eyebrow orange" id="home-greeting">HELLO, YOU</div><div class="home-intro-row"><h1>Our space<span class="accent">.</span></h1><div class="dodo-home-wrap"><button type="button" class="dodo-home" id="dodo-home" aria-label="Say hello to our dodo" title="Tap to say hello"><span class="dodo-home-sun" aria-hidden="true"></span><span class="dodo-home-hill" aria-hidden="true"></span><span class="dodo-home-shadow" aria-hidden="true"></span><span class="dodo-home-character" id="dodo-home-character" aria-hidden="true"><span class="dodo-home-sprite" id="dodo-home-sprite"></span></span></button><span class="dodo-home-hint" id="dodo-home-hint" aria-hidden="true">Tap me!</span></div></div></div>
+      <section id="home-view" class="view"><div class="home-intro"><div class="eyebrow orange" id="home-greeting">HELLO, YOU</div><div class="home-intro-row"><h1>Our space<span class="accent">.</span></h1><div class="dodo-home-wrap"><button type="button" id="dodo-world-open" class="dodo-world-open" aria-label="Expand Dodo’s home" title="Visit Dodo’s world">Explore ↗</button><button type="button" class="dodo-home" id="dodo-home" aria-label="Say hello to our dodo" title="Tap to say hello"><span class="dodo-home-sun" aria-hidden="true"></span><span class="dodo-home-hill" aria-hidden="true"></span><span class="dodo-home-shadow" aria-hidden="true"></span><span class="dodo-home-character" id="dodo-home-character" aria-hidden="true"><span class="dodo-home-sprite" id="dodo-home-sprite"></span></span></button><span class="dodo-home-hint" id="dodo-home-hint" aria-hidden="true">Tap me!</span></div></div></div>
         <div class="home-grid">
           <button class="feature-card feature-active" data-go="map"><span class="feature-icon">🌍</span><span class="feature-copy"><strong>Our next stop</strong><small>Suggestions, plans & places we've been</small></span><span class="feature-arrow">↗</span></button>
           <button class="feature-card feature-active" data-go="places"><span class="feature-icon">😈</span><span class="feature-copy"><strong>Our places to</strong><small>Suggestions, priorities & ticked-off places</small></span><span class="feature-arrow">↗</span></button>
@@ -140,4 +140,28 @@
   </div>
 </div>
 <div class="toast" role="status" aria-live="polite" id="toast"></div><div class="undo-toast" id="undo-toast" hidden role="status" aria-live="polite"><span id="undo-label">Idea removed</span><button id="undo-button" type="button">Undo</button><button id="undo-dismiss" type="button" aria-label="Dismiss">×</button></div>
+
+<!-- Dodo’s world is deliberately independent of Firebase and the homepage Dodo. -->
+<div class="dodo-world-overlay" id="dodo-world-overlay" hidden>
+  <section class="dodo-world-panel" role="dialog" aria-modal="true" aria-labelledby="dodo-world-title">
+    <header class="dodo-world-header">
+      <div><span class="dodo-world-overline">A LITTLE WORLD OF HIS OWN</span><h2 id="dodo-world-title">Dodo's world <span aria-hidden="true">🦤</span></h2></div>
+      <button type="button" class="dodo-world-close" id="dodo-world-close" aria-label="Close Dodo's world">✕</button>
+    </header>
+    <div class="dodo-world-scene" id="dodo-world-scene" aria-label="Dodo's grassy meadow">
+      <div class="dodo-world-sun" aria-hidden="true"></div>
+      <div class="dodo-world-cloud dodo-cloud-one" aria-hidden="true"></div><div class="dodo-world-cloud dodo-cloud-two" aria-hidden="true"></div>
+      <div class="dodo-world-far-hills" aria-hidden="true"></div><div class="dodo-world-near-hills" aria-hidden="true"></div>
+      <div class="dodo-world-field" aria-hidden="true"></div><div class="dodo-world-path" aria-hidden="true"></div>
+      <div class="dodo-world-flowers" aria-hidden="true">✿ · ✿ &nbsp; · &nbsp; ✿ &nbsp;&nbsp; ✿ · ✿</div>
+      <button type="button" id="dodo-world-barn" class="dodo-world-barn" aria-label="Send Dodo to his barn to sleep" title="Tap to let Dodo sleep">
+        <svg viewBox="0 0 180 176" aria-hidden="true" focusable="false"><ellipse cx="90" cy="168" rx="74" ry="6" fill="#667e5c" opacity=".20"/><path d="M23 76 L90 20 L158 76 L151 151 Q89 162 28 150Z" fill="#bc7751" stroke="#8b513e" stroke-width="3"/><path d="M15 82 L87 15 Q91 11 96 16 L166 82 L151 88 L91 38 L31 89 Z" fill="#725445" stroke="#5d4539" stroke-width="4"/><path d="M39 88 V144 M62 68 V151 M117 67 V152 M142 86 V144" stroke="#965c45" stroke-width="3" opacity=".62"/><rect x="66" y="87" width="49" height="66" rx="22" fill="#453a35"/><path d="M71 92 Q91 76 110 92" stroke="#d89a68" stroke-width="5" fill="none"/><path d="M70 151 L111 151" stroke="#6e4937" stroke-width="5"/><rect x="39" y="97" width="19" height="20" rx="3" fill="#f6d99d" stroke="#835744" stroke-width="3"/><path d="M48 98 V117 M39 108 H58" stroke="#835744" stroke-width="2"/><path d="M88 23 V48" stroke="#a18063" stroke-width="3"/></svg>
+        <span class="dodo-world-zzz" id="dodo-world-zzz" aria-hidden="true">z<span>z</span><span>z</span></span>
+      </button>
+      <div class="dodo-world-bird" id="dodo-world-bird" role="button" tabindex="0" aria-label="Tap Dodo for a reaction"><span class="dodo-world-sprite" id="dodo-world-sprite"></span></div>
+    </div>
+    <footer class="dodo-world-footer"><span id="dodo-world-caption" aria-live="polite">Tap Dodo for a surprise, or tap his barn for a nap.</span><span class="dodo-world-footnote">No chores. Just Dodo.</span></footer>
+  </section>
+</div>
+<script src="./dodo-world.js" defer></script>
 <script src="./dodo-home.js" defer></script></body></html>

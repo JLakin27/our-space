@@ -219,3 +219,40 @@ body:has(#auth-modal:not([hidden])){overflow:hidden}
 body.auth-pending .shell{visibility:hidden}
 body.auth-pending #auth-modal{display:none!important}
 body.auth-pending::after{content:"Opening Our Space…";position:fixed;inset:0;z-index:4000;display:grid;place-items:center;background:#f8f7f3;color:#9a8d80;font:600 13px 'DM Sans',sans-serif;letter-spacing:.25px}
+
+
+/* Dodo's expandable meadow (isolated from existing site styles) */
+.dodo-world-open{align-self:flex-end;margin:0 3px 2px;padding:1px 5px;border:0;background:transparent;color:#938775;font-size:10px;font-weight:800;line-height:1.3;letter-spacing:.1px;cursor:pointer}
+.dodo-world-open:hover{color:#bf7e64}.dodo-world-open:focus-visible{outline:2px solid #7d9f85;border-radius:4px}
+.dodo-world-overlay[hidden]{display:none!important}.dodo-world-overlay{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(36,42,35,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.dodo-world-panel{width:min(100%,920px);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;overflow:hidden;border:1px solid #e9e4d9;border-radius:24px;background:#faf8f0;box-shadow:0 28px 80px #222a2740;color:#465243}
+.dodo-world-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 22px;background:#faf8f0}
+.dodo-world-overline{display:block;color:#c9856d;font-weight:800;font-size:10px;letter-spacing:1.4px}
+.dodo-world-header h2{margin:3px 0 0;font-size:clamp(22px,3.5vw,31px);font-weight:800;letter-spacing:-.8px;line-height:1.15}
+.dodo-world-close{display:grid;place-items:center;width:38px;height:38px;flex:none;border:1px solid #dce1d5;border-radius:50%;background:#fffef9;color:#516450;font-size:17px;cursor:pointer}
+.dodo-world-close:focus-visible,.dodo-world-barn:focus-visible{outline:3px solid #67967e;outline-offset:3px}
+.dodo-world-scene{position:relative;overflow:hidden;isolation:isolate;flex:1;min-height:340px;max-height:670px;aspect-ratio:1.7;background:linear-gradient(180deg,#c8e7e5 0%,#e0ece3 52%,#f0edcc 76%,#c4dba3 100%)}
+.dodo-world-sun{position:absolute;right:17%;top:11%;width:75px;aspect-ratio:1;border-radius:50%;background:#ffe4a5;box-shadow:0 0 0 18px #ffebb53c,0 0 75px #fbe6a7aa}
+.dodo-world-cloud{position:absolute;top:12%;left:15%;width:100px;height:30px;border-radius:30px;background:#ffffffa6;box-shadow:30px -10px 0 2px #ffffffa6,62px 2px 0 -4px #ffffffa6}
+.dodo-cloud-two{left:55%;top:22%;transform:scale(.65);opacity:.65}
+.dodo-world-far-hills{position:absolute;inset:37% -10% 0;background:#b9d2bc;clip-path:polygon(0 45%,12% 27%,29% 43%,45% 14%,60% 37%,74% 19%,100% 43%,100% 100%,0 100%)}
+.dodo-world-near-hills{position:absolute;inset:48% -10% 0;background:#94bc97;clip-path:polygon(0 56%,18% 32%,36% 50%,56% 24%,72% 43%,91% 23%,100% 33%,100% 100%,0 100%)}
+.dodo-world-field{position:absolute;inset:68% -5% 0;background:linear-gradient(170deg,#a5c88f,#8cb879 55%,#7baa70);border-radius:48% 55% 0 0 / 15% 15% 0 0}
+.dodo-world-path{position:absolute;bottom:-26%;right:14%;width:35%;height:48%;background:#d6bc8f;opacity:.55;transform:rotate(-12deg);border-radius:50%}
+.dodo-world-flowers{position:absolute;bottom:8%;left:8%;width:80%;font-size:19px;letter-spacing:26px;white-space:nowrap;overflow:hidden;color:#f6dfcf;pointer-events:none;opacity:.9}
+.dodo-world-barn{position:absolute;z-index:5;bottom:17%;left:72%;width:clamp(130px,25%,195px);height:auto;aspect-ratio:180/176;padding:0;border:0;background:transparent;cursor:pointer;transform:translateX(-50%);touch-action:manipulation}
+.dodo-world-barn svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(2px 6px 3px #4b59343a)}
+.dodo-world-barn:hover{filter:brightness(1.08)}
+.dodo-world-zzz{position:absolute;left:57%;top:-16%;display:none;color:#635c82;font-size:22px;font-weight:900;text-shadow:0 2px 3px #ffffffa8;animation:dodo-world-sleep 2s ease-in-out infinite}
+.dodo-world-zzz span:first-child{font-size:16px}.dodo-world-zzz span:last-child{font-size:12px}
+.dodo-world-barn.is-sleeping .dodo-world-zzz{display:block}
+@keyframes dodo-world-sleep{0%,100%{transform:translateY(0);opacity:.55}50%{transform:translateY(-9px);opacity:1}}
+.dodo-world-bird{position:absolute;z-index:4;left:45%;bottom:10%;width:clamp(124px,24%,185px);aspect-ratio:525/522;cursor:pointer;touch-action:manipulation;transform:translateX(-50%);will-change:left}
+.dodo-world-sprite{display:block;width:100%;height:100%;background-repeat:no-repeat;transform:translateX(-12%);pointer-events:none}
+.dodo-world-bird.is-right .dodo-world-sprite{transform:translateX(12%) scaleX(-1)}
+.dodo-world-bird.is-sleeping{display:none}
+.dodo-world-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 22px;font-size:12px;color:#667663;background:#faf8f0}
+.dodo-world-footnote{color:#ac998b;font-weight:600;white-space:nowrap}
+@media(max-width:620px){.dodo-world-overlay{padding:0}.dodo-world-panel{width:100%;height:100dvh;max-height:none;border:0;border-radius:0}.dodo-world-header{padding:17px 18px}.dodo-world-scene{aspect-ratio:auto;max-height:none;min-height:0}.dodo-world-barn{left:73%;bottom:22%;width:40%;max-width:190px}.dodo-world-bird{bottom:13%;width:clamp(118px,37%,175px)}.dodo-world-footer{padding:14px 17px 22px;align-items:flex-start;flex-direction:column}.dodo-world-flowers{letter-spacing:14px;left:3%}}
+@media(prefers-reduced-motion:reduce){.dodo-world-zzz{animation:none}.dodo-world-bird{will-change:auto}}
+body.dodo-world-opened{overflow:hidden}
