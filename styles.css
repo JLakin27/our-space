@@ -317,3 +317,33 @@ body.dodo-world-opened .dodo-home-character{visibility:hidden}
   .dodo-world-balloon.is-floating{transform:translate3d(38px,-45px,0) rotate(8deg) scale(.83)}
 }
 @media(max-width:380px){.dodo-world-barn{left:76%;width:112px}.dodo-world-bird{width:118px}.dodo-world-balloon{left:11%}}
+
+
+/* Dodo World V4: portrait proportions and an intentional feed interaction. */
+.dodo-world-header-actions{display:flex;align-items:center;gap:9px;flex:none}
+.dodo-world-feed{border:1px solid #c4dac2;border-radius:999px;padding:9px 12px;background:#e7eee0;color:#45674b;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer;touch-action:manipulation}
+.dodo-world-feed:hover{background:#d9e9d6}
+.dodo-world-feed:disabled{cursor:default;opacity:.55}
+.dodo-world-feed:focus-visible{outline:3px solid #67967e;outline-offset:2px}
+/* The barn base and visible sprite feet share a floor; the sprite frame has ~8.5% bottom transparency. */
+.dodo-world-barn{bottom:calc(var(--dodo-ground) + 7px)}
+.dodo-world-food{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;pointer-events:none;width:auto;height:auto;padding:0;line-height:1;font-size:32px;display:block;transform:translateX(-50%);z-index:7;transition:none!important}
+.dodo-world-food[hidden]{display:none!important}
+.dodo-world-food:hover,.dodo-world-food.is-eating{transform:translateX(-50%)}
+@media(max-width:620px){
+  .dodo-world-header{padding:12px 14px}
+  .dodo-world-header h2{font-size:clamp(21px,6vw,27px)}
+  .dodo-world-header-actions{gap:7px}
+  .dodo-world-feed{padding:8px 10px;font-size:11px}
+  .dodo-world-scene{--dodo-ground:clamp(66px,12%,103px)}
+  /* Less blank sky; more meadow and larger inhabitants. */
+  .dodo-world-far-hills{inset:24% -10% 0}
+  .dodo-world-near-hills{inset:35% -10% 0}
+  .dodo-world-field{inset:46% -5% 0}
+  .dodo-world-bird{bottom:var(--dodo-ground);width:clamp(164px,54vw,220px)}
+  .dodo-world-barn{left:72%;width:clamp(172px,57vw,230px);bottom:calc(var(--dodo-ground) + 7px)}
+  .dodo-world-food{left:29%;bottom:calc(var(--dodo-ground) + 14px);font-size:34px;width:auto;height:auto}
+  .dodo-world-balloon{top:13%;left:12%}
+  .dodo-world-sun{top:7%}
+}
+@media(max-width:380px){.dodo-world-barn{left:73%;width:clamp(168px,55vw,198px)}.dodo-world-bird{width:clamp(160px,53vw,195px)}.dodo-world-food{left:28%}}

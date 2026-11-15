@@ -4,14 +4,14 @@
   const $ = id => document.getElementById(id);
   const overlay=$('dodo-world-overlay'),open=$('dodo-world-open'),close=$('dodo-world-close');
   const scene=$('dodo-world-scene'),bird=$('dodo-world-bird'),sprite=$('dodo-world-sprite');
-  const barn=$('dodo-world-barn'),food=$('dodo-world-food'),sun=$('dodo-world-sun'),balloon=$('dodo-world-balloon'),caption=$('dodo-world-caption'),home=$('dodo-home');
+  const barn=$('dodo-world-barn'),food=$('dodo-world-food'),feedButton=$('dodo-world-feed'),sun=$('dodo-world-sun'),balloon=$('dodo-world-balloon'),caption=$('dodo-world-caption'),home=$('dodo-home');
   if(!overlay||!open||!close||!scene||!bird||!sprite||!barn||!caption)return;
   const motion=matchMedia('(prefers-reduced-motion: reduce)');
   const rates={idle:76,idle_look_at_camera:86,walk:55,run:48,peck:55,jump:65,squawk:60,whacked:62};
   const art={};
   const random=(a,b)=>a+Math.random()*(b-a);
   const choose=xs=>xs[Math.floor(Math.random()*xs.length)];
-  let loaded=false,visible=false,asleep=false,x=43,facing='left',state='rest';
+  let loaded=false,visible=false,asleep=false,feeding=false,x=43,facing='left',state='rest';
   let token=0,raf=0,timeout=0,previousFocus=null,roamCount=0,restCount=0;
   const reset=()=>{++token;if(raf)cancelAnimationFrame(raf);if(timeout)clearTimeout(timeout);raf=0;timeout=0;};
   const schedule=(callback,delay)=>{const t=token;timeout=setTimeout(()=>{timeout=0;if(visible&&!document.hidden&&t===token)callback();},delay);};
@@ -57,7 +57,7 @@
     schedule(decide,random(3500,6500));
   }
   function decide(){
-    if(asleep||!visible)return;
+    if(asleep||feeding||!visible)return;
     const r=Math.random();
     if(r<.17){setFacing(choose(['left','right']));animate('idle_look_at_camera',art.idle_look_at_camera.frameCount*rates.idle_look_at_camera,idle);return;}
     const isRun=r>.73;
@@ -71,7 +71,7 @@
     caption.textContent=isRun?'Dodo has somewhere very important to be.':'Just out for a little wander…';
     animate(isRun?'run':'walk',duration,idle,{from:x,to:destination});
   }
-  function react(){if(!visible||asleep||!loaded||state==='going-to-barn')return;
+  function react(){if(!visible||asleep||feeding||!loaded||state==='going-to-barn')return;
     if(motion.matches)return;
     const reaction=choose(['jump','peck','squawk','whacked']);
     animate(reaction,art[reaction].frameCount*rates[reaction],idle);
@@ -81,7 +81,7 @@
     return Math.max(7,Math.min(93,((bounds.left+bounds.width/2-field.left)/field.width)*100));
   }
   function goToBarn(){
-    if(!visible||!loaded)return;
+    if(!visible||!loaded||feeding)return;
     if(asleep){wake();return;}
     reset();state='going-to-barn';caption.textContent='Off to his little barn…';
     if(motion.matches){fallAsleep();return;}
@@ -96,19 +96,33 @@
     if(motion.matches){idle();return;}
     schedule(()=>animate('walk',780,idle,{from:door,to:48}),450);
   }
+  function clearFood(){
+    feeding=false;
+    food.hidden=true;
+    feedButton.disabled=false;
+  }
   function feed(){
-    if(!visible||!loaded||asleep)return;
-    const target=positionOf(food);
-    caption.textContent='Dodo spotted a snack!';
-    if(motion.matches){setX(target);draw('peck',0);return;}
-    const duration=Math.max(430,Math.abs(target-x)/78*1000);
-    const fn=Math.abs(target-x)>23?'run':'walk';
-    animate(fn,duration,()=>{
-      food?.classList.add('is-eating');
+    if(!visible||!loaded||asleep||feeding||motion.matches)return;
+    feeding=true;feedButton.disabled=true;food.hidden=false;
+    // Approach from whichever side he is on, leaving room for his beak to reach the cheese.
+    const cheeseX=positionOf(food);
+    const sceneWidth=scene.getBoundingClientRect().width;
+    const birdWidth=bird.getBoundingClientRect().width;
+    const cheeseWidth=food.getBoundingClientRect().width;
+    const beakGap=(birdWidth*.30+cheeseWidth*.33)/sceneWidth*100;
+    const goingRight=x<cheeseX;
+    const destination=Math.max(7,Math.min(93,cheeseX+(goingRight?-beakGap:beakGap)));
+    // Facing cheese throughout the eating animation.
+    const finish=()=>{
+      setFacing(goingRight?'right':'left');
       animate('peck',art.peck.frameCount*rates.peck,()=>{
-        food?.classList.remove('is-eating');idle();
+        clearFood();idle();
       });
-    },{from:x,to:target});
+    };
+    const distance=Math.abs(destination-x);
+    if(distance<3){setX(destination);finish();return;}
+    const duration=Math.max(430,distance/88*1000);
+    animate(distance>17?'run':'walk',duration,finish,{from:x,to:destination});
   }
   async function load(){
     if(loaded)return;
@@ -126,6 +140,7 @@
   async function show(){
     if(!overlay.hidden)return;
     previousFocus=document.activeElement;
+    clearFood();
     overlay.hidden=false;document.body.classList.add('dodo-world-opened');document.dispatchEvent(new Event('dodo-world-visibility'));visible=true;
     close.focus();
     caption.textContent='Waking up Dodo’s world…';
@@ -137,7 +152,7 @@
   }
   function hide(){
     if(overlay.hidden)return;
-    visible=false;reset();overlay.hidden=true;document.body.classList.remove('dodo-world-opened');document.dispatchEvent(new Event('dodo-world-visibility'));
+    visible=false;reset();clearFood();overlay.hidden=true;document.body.classList.remove('dodo-world-opened');document.dispatchEvent(new Event('dodo-world-visibility'));
     previousFocus?.focus?.();
   }
   open.addEventListener('click',show);
@@ -147,16 +162,16 @@
     if(overlay.hidden)return;
     if(e.key==='Escape'){e.preventDefault();hide();}
     if(e.key==='Tab'){
-      const focusable=[close,sun,balloon,food,barn,bird];
+      const focusable=[feedButton,close,sun,balloon,barn,bird];
       const current=focusable.indexOf(document.activeElement);
-      if(e.shiftKey&&current<=0){e.preventDefault();barn.focus();}
-      else if(!e.shiftKey&&current===focusable.length-1){e.preventDefault();close.focus();}
+      if(e.shiftKey&&current<=0){e.preventDefault();bird.focus();}
+      else if(!e.shiftKey&&current===focusable.length-1){e.preventDefault();feedButton.focus();}
     }
   });
   bird.addEventListener('click',react);
   bird.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();react();}});
   barn.addEventListener('click',e=>{e.stopPropagation();goToBarn();});
-  food?.addEventListener('click',e=>{e.stopPropagation();feed();});
+  feedButton.addEventListener('click',e=>{e.stopPropagation();feed();});
   sun?.addEventListener('click',e=>{e.stopPropagation();scene.classList.toggle('is-sunny');});
   balloon?.addEventListener('click',e=>{e.stopPropagation();balloon.classList.toggle('is-floating');});
   document.addEventListener('visibilitychange',()=>{if(!visible)return;if(document.hidden)reset();else resume();});
