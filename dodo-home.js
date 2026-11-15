@@ -41,7 +41,7 @@
       home.setAttribute('aria-label','Tap Dodo for a reaction');
     }
   }
-  function playable(){return ready&&document.getElementById('auth-modal')?.hidden===true&&!document.hidden&&!view.hidden&&home.getClientRects().length>0&&inViewport;}
+  function playable(){return ready&&document.getElementById('auth-modal')?.hidden===true&&!document.hidden&&!document.body.classList.contains('dodo-world-opened')&&!view.hidden&&home.getClientRects().length>0&&inViewport;}
   function stop(){cancel();active=false;mode='stopped';}
 
   // Continuous, gentle idle movement when he's home (not a static base frame).
@@ -134,6 +134,7 @@
     react();
   });
   document.addEventListener('visibilitychange',reevaluate);
+  document.addEventListener('dodo-world-visibility',reevaluate);
   reduce.addEventListener?.('change',()=>{stop();reevaluate();});
   new MutationObserver(reevaluate).observe(view,{attributes:true,attributeFilter:['hidden']});
   new MutationObserver(reevaluate).observe(document.getElementById('auth-modal'),{attributes:true,attributeFilter:['hidden']});

@@ -1,34 +1,13 @@
-OUR SPACE — DODO'S EXPANDED WORLD (V1)
+DODO WORLD V2 — install over V1
 
-Built on the 15 November login-no-flash update you most recently installed.
+Replace these files in the ROOT of your GitHub Pages repository:
+  index.html
+  styles.css
+  dodo-world.js
+  dodo-home.js
 
-GITHUB: REPLACE
-- index.html
-- styles.css
+Leave app.js, sprite JSON files, WebP assets and Firebase rules unchanged.
 
-GITHUB: ADD
-- dodo-world.js (repository root)
-- dodo-world-sprites.json (repository root)
-- dodo-assets/run.webp (inside your existing dodo-assets folder)
+Changes: Dodo ground-level barn position, bird in front of barn, more left/right facing, sun and hot-air balloon controls, snack action, home mascot pauses during expanded world, world RAF pauses when closed/hidden, removed header/footer tagline, clearer Visit his world button.
 
-GITHUB: KEEP UNCHANGED
-- app.js
-- dodo-home.js
-- All other existing dodo-assets (including whacked.webp)
-- Firebase rules and data
-
-What it does:
-- Small Explore ↗ button above the existing Dodo box
-- Full-screen meadow on mobile, large modal on desktop
-- Natural left/right walking and occasional running
-- Tap Dodo for jump/peck/squawk/whacked reactions
-- Tap the barn to walk inside; Zzzs appear; tap again to wake him
-- Preserves sleeping state and location while that browser page stays open
-- Stops animations when closed or browser tab is hidden
-- No in-app purchases, coins, chores, Firebase writes or persistent user data
-
-Note: You must host it via GitHub Pages or an HTTP server; opening
-index.html directly with file:// will prevent loading the sprite JSON.
-
-The ZIP intentionally includes ONLY the five files you need to add/replace.
-The app's existing functionality is left untouched.
+Note: dodo-home.js is included because its visibility logic needs to pause while Dodo World is open. The world scripts never save to Firebase.

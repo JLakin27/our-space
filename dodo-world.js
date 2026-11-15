@@ -4,7 +4,7 @@
   const $ = id => document.getElementById(id);
   const overlay=$('dodo-world-overlay'),open=$('dodo-world-open'),close=$('dodo-world-close');
   const scene=$('dodo-world-scene'),bird=$('dodo-world-bird'),sprite=$('dodo-world-sprite');
-  const barn=$('dodo-world-barn'),caption=$('dodo-world-caption'),home=$('dodo-home');
+  const barn=$('dodo-world-barn'),food=$('dodo-world-food'),sun=$('dodo-world-sun'),balloon=$('dodo-world-balloon'),caption=$('dodo-world-caption'),home=$('dodo-home');
   if(!overlay||!open||!close||!scene||!bird||!sprite||!barn||!caption)return;
   const motion=matchMedia('(prefers-reduced-motion: reduce)');
   const rates={idle:76,idle_look_at_camera:86,walk:55,run:48,peck:55,jump:65,squawk:60,whacked:62};
@@ -12,7 +12,7 @@
   const random=(a,b)=>a+Math.random()*(b-a);
   const choose=xs=>xs[Math.floor(Math.random()*xs.length)];
   let loaded=false,visible=false,asleep=false,x=43,facing='left',state='rest';
-  let token=0,raf=0,timeout=0,previousFocus=null,roamCount=0;
+  let token=0,raf=0,timeout=0,previousFocus=null,roamCount=0,restCount=0;
   const reset=()=>{++token;if(raf)cancelAnimationFrame(raf);if(timeout)clearTimeout(timeout);raf=0;timeout=0;};
   const schedule=(callback,delay)=>{const t=token;timeout=setTimeout(()=>{timeout=0;if(visible&&!document.hidden&&t===token)callback();},delay);};
   function setX(value){x=Math.max(7,Math.min(93,value));bird.style.left=`${x}%`;}
@@ -43,6 +43,7 @@
   }
   function idle(){
     if(asleep)return;
+    if(++restCount%2===0)setFacing(choose(['left','right']));
     reset();state='idle';caption.textContent='Tap Dodo for a surprise, or tap his barn for a nap.';
     if(motion.matches){draw('idle',0);return;}
     const t=token,m=art.idle;let start,prev=-1;
@@ -58,9 +59,11 @@
   function decide(){
     if(asleep||!visible)return;
     const r=Math.random();
-    if(r<.25){animate('idle_look_at_camera',art.idle_look_at_camera.frameCount*rates.idle_look_at_camera,idle);return;}
+    if(r<.17){setFacing(choose(['left','right']));animate('idle_look_at_camera',art.idle_look_at_camera.frameCount*rates.idle_look_at_camera,idle);return;}
     const isRun=r>.73;
     let destination=random(12,82);
+    // Alternate travel direction regularly so he doesn't favour one side.
+    if(roamCount%2===0) destination=x<47?random(57,84):random(10,34);
     if(Math.abs(destination-x)<16)destination=x<47?random(58,83):random(12,36);
     roamCount++;
     const speed=isRun?95:43; // percentage of meadow per second
@@ -78,16 +81,30 @@
     if(asleep){wake();return;}
     reset();state='going-to-barn';caption.textContent='Off to his little barn…';
     if(motion.matches){fallAsleep();return;}
-    const to=70;const duration=Math.max(420,Math.abs(to-x)/42*1000);
+    const to=72;const duration=Math.max(420,Math.abs(to-x)/42*1000);
     animate('walk',duration,fallAsleep,{from:x,to});
     state='going-to-barn';
   }
   function fallAsleep(){reset();asleep=true;state='sleeping';bird.classList.add('is-sleeping');barn.classList.add('is-sleeping');barn.setAttribute('aria-label','Wake Dodo up');caption.textContent='Shhh… Dodo is having a little nap. Tap the barn to wake him.';}
   function wake(){
     reset();asleep=false;bird.classList.remove('is-sleeping');barn.classList.remove('is-sleeping');barn.setAttribute('aria-label','Send Dodo to his barn to sleep');
-    setX(70);setFacing('left');draw('idle',0);caption.textContent='Up you get, sleepy Dodo!';
+    setX(72);setFacing('left');draw('idle',0);caption.textContent='Up you get, sleepy Dodo!';
     if(motion.matches){idle();return;}
-    schedule(()=>animate('walk',780,idle,{from:70,to:48}),450);
+    schedule(()=>animate('walk',780,idle,{from:72,to:48}),450);
+  }
+  function feed(){
+    if(!visible||!loaded||asleep)return;
+    const target=22;
+    caption.textContent='Dodo spotted a snack!';
+    if(motion.matches){setX(target);draw('peck',0);return;}
+    const duration=Math.max(430,Math.abs(target-x)/78*1000);
+    const fn=Math.abs(target-x)>23?'run':'walk';
+    animate(fn,duration,()=>{
+      food?.classList.add('is-eating');
+      animate('peck',art.peck.frameCount*rates.peck,()=>{
+        food?.classList.remove('is-eating');idle();
+      });
+    },{from:x,to:target});
   }
   async function load(){
     if(loaded)return;
@@ -105,7 +122,7 @@
   async function show(){
     if(!overlay.hidden)return;
     previousFocus=document.activeElement;
-    overlay.hidden=false;document.body.classList.add('dodo-world-opened');visible=true;
+    overlay.hidden=false;document.body.classList.add('dodo-world-opened');document.dispatchEvent(new Event('dodo-world-visibility'));visible=true;
     close.focus();
     caption.textContent='Waking up Dodo’s world…';
     try{await load();if(!visible)return;
@@ -116,7 +133,7 @@
   }
   function hide(){
     if(overlay.hidden)return;
-    visible=false;reset();overlay.hidden=true;document.body.classList.remove('dodo-world-opened');
+    visible=false;reset();overlay.hidden=true;document.body.classList.remove('dodo-world-opened');document.dispatchEvent(new Event('dodo-world-visibility'));
     previousFocus?.focus?.();
   }
   open.addEventListener('click',show);
@@ -126,7 +143,7 @@
     if(overlay.hidden)return;
     if(e.key==='Escape'){e.preventDefault();hide();}
     if(e.key==='Tab'){
-      const focusable=[close,barn,bird];
+      const focusable=[close,sun,balloon,food,barn,bird];
       const current=focusable.indexOf(document.activeElement);
       if(e.shiftKey&&current<=0){e.preventDefault();barn.focus();}
       else if(!e.shiftKey&&current===focusable.length-1){e.preventDefault();close.focus();}
@@ -135,6 +152,9 @@
   bird.addEventListener('click',react);
   bird.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();react();}});
   barn.addEventListener('click',e=>{e.stopPropagation();goToBarn();});
+  food?.addEventListener('click',e=>{e.stopPropagation();feed();});
+  sun?.addEventListener('click',e=>{e.stopPropagation();scene.classList.toggle('is-sunny');});
+  balloon?.addEventListener('click',e=>{e.stopPropagation();balloon.classList.toggle('is-floating');});
   document.addEventListener('visibilitychange',()=>{if(!visible)return;if(document.hidden)reset();else resume();});
   motion.addEventListener?.('change',()=>{if(visible)resume();});
   // The auth overlay hides the button, preventing opening before login.

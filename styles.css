@@ -256,3 +256,27 @@ body.auth-pending::after{content:"Opening Our Space…";position:fixed;inset:0;z
 @media(max-width:620px){.dodo-world-overlay{padding:0}.dodo-world-panel{width:100%;height:100dvh;max-height:none;border:0;border-radius:0}.dodo-world-header{padding:17px 18px}.dodo-world-scene{aspect-ratio:auto;max-height:none;min-height:0}.dodo-world-barn{left:73%;bottom:22%;width:40%;max-width:190px}.dodo-world-bird{bottom:13%;width:clamp(118px,37%,175px)}.dodo-world-footer{padding:14px 17px 22px;align-items:flex-start;flex-direction:column}.dodo-world-flowers{letter-spacing:14px;left:3%}}
 @media(prefers-reduced-motion:reduce){.dodo-world-zzz{animation:none}.dodo-world-bird{will-change:auto}}
 body.dodo-world-opened{overflow:hidden}
+
+/* Dodo World V2: ground alignment, clearer entry, interactive scene. */
+.dodo-world-open{align-self:stretch;text-align:center;margin:0 0 5px;padding:6px 7px;border-radius:999px;border:1px solid #d5ddcb;background:#e7eee0;color:#536e55;font-size:11px;font-weight:800;line-height:1.2;box-shadow:0 2px 8px #48604312;transition:background .2s,transform .2s}
+.dodo-world-open:hover{background:#dce8d2;color:#38583f;transform:translateY(-1px)}
+.dodo-world-open:focus-visible{outline:3px solid #7fa88b;outline-offset:2px}
+.dodo-world-scene{--dodo-ground:8%;}
+.dodo-world-barn{bottom:var(--dodo-ground);z-index:3;}
+.dodo-world-bird{bottom:var(--dodo-ground);z-index:6;}
+.dodo-world-sun{z-index:2;border:0;cursor:pointer;transition:box-shadow .55s ease,background .55s ease,transform .55s ease}
+.dodo-world-scene.is-sunny{background:linear-gradient(180deg,#b8dded 0%,#e9e9be 53%,#e6dc9e 77%,#a7c789 100%)}
+.dodo-world-scene.is-sunny .dodo-world-sun{background:#fff0aa;box-shadow:0 0 0 31px #ffe8a93c,0 0 100px 35px #ffe3a8aa;transform:scale(1.08)}
+.dodo-world-balloon{position:absolute;z-index:2;top:23%;left:34%;width:65px;height:103px;padding:0;border:0;background:none;cursor:pointer;display:flex;align-items:center;flex-direction:column;transform:translate3d(0,0,0);transition:transform 3.6s ease-in-out;touch-action:manipulation}
+.dodo-world-balloon.is-floating{transform:translate3d(70px,-45px,0) rotate(7deg)}
+.dodo-balloon-envelope{display:block;width:61px;height:70px;border-radius:50% 50% 43% 43%;background:repeating-linear-gradient(90deg,#c67d79 0 15px,#f8d99e 15px 30px,#8db99f 30px 44px);border:2px solid #af846e;clip-path:polygon(50% 0,78% 5%,96% 27%,100% 55%,88% 82%,62% 100%,38% 100%,12% 82%,0 55%,4% 27%,22% 5%);box-shadow:inset -8px -7px 9px #67442a18}
+.dodo-balloon-ropes{height:13px;width:30px;border-left:2px solid #8e7054;border-right:2px solid #8e7054;transform:perspective(20px) rotateX(-15deg)}
+.dodo-balloon-basket{height:16px;width:28px;border:2px solid #9c734e;background:repeating-linear-gradient(0deg,#c49b68 0 5px,#af875b 5px 8px);border-radius:1px 1px 5px 5px}
+.dodo-world-food{position:absolute;bottom:calc(var(--dodo-ground) + 2%);left:22%;z-index:4;border:0;background:#fff2d5c9;border-radius:50%;width:49px;height:37px;cursor:pointer;display:grid;place-items:center;font-size:24px;box-shadow:0 4px 8px #53633b2e;touch-action:manipulation}
+.dodo-food-label{position:absolute;top:100%;margin-top:3px;font-size:10px;font-weight:800;color:#415e3a;text-shadow:0 1px 2px #eaf1d9}
+.dodo-world-food:focus-visible,.dodo-world-sun:focus-visible,.dodo-world-balloon:focus-visible,.dodo-world-bird:focus-visible{outline:3px solid #518768;outline-offset:3px}
+.dodo-world-food.is-eating{transform:scale(.92)}
+@media(max-width:620px){.dodo-world-scene{--dodo-ground:11%;}.dodo-world-barn{bottom:var(--dodo-ground);left:73%;width:40%;}.dodo-world-bird{bottom:var(--dodo-ground)}.dodo-world-balloon{left:24%;top:27%;transform:scale(.78);transform-origin:top center}.dodo-world-balloon.is-floating{transform:translate3d(35px,-43px,0) rotate(8deg) scale(.78)}.dodo-world-food{left:17%;}}
+@media(prefers-reduced-motion:reduce){.dodo-world-balloon,.dodo-world-sun,.dodo-world-open{transition:none!important}}
+/* There is one Dodo: hide his homepage incarnation while the larger world is open. */
+body.dodo-world-opened .dodo-home-character{visibility:hidden}
