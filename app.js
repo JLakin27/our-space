@@ -423,26 +423,7 @@ function bindEvents(){bindMusic();bindProfiles();bindHomeKpis();document.querySe
   $('map-expand').onclick=toggleMapExpanded;$('notifications-btn').onclick=()=>{$('notifications-modal').hidden=false;};$('close-notifications').onclick=()=>{$('notifications-modal').hidden=true;};$('kiss-celebration-close').onclick=closeKissCelebration;$('kiss-celebration-done').onclick=closeKissCelebration;$('kiss-celebration').addEventListener('click',e=>{if(e.target===$('kiss-celebration'))closeKissCelebration();});$('close-detail').onclick=closeDetails;$('save-description').onclick=saveDescription;$('cancel-description').onclick=()=>{$('edit-description-fields').hidden=true;};$('confirm-visited').onclick=saveVisit;document.querySelectorAll('.backdrop').forEach(el=>el.addEventListener('click',e=>{if(e.target!==el)return;if(el.id==='pin-modal')closePinModal();if(el.id==='detail-modal')closeDetails();if(el.id==='notifications-modal')el.hidden=true;}));document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(mapExpanded)toggleMapExpanded();closePinModal();closeDetails();$('notifications-modal').hidden=true;closeKissCelebration();$('search-results').hidden=true;closeSidebar();});$('demo-user').onchange=e=>{currentUser=e.target.value;localStorage.setItem('our-site-demo-user',currentUser);$('identity').textContent=`Preview as ${currentUser}`;showProfileStatus();render();refreshNotificationsWithKisses();};$('auth-form').addEventListener('submit',async e=>{e.preventDefault();$('auth-error').textContent='';const b=$('auth-form').querySelector('button');b.disabled=true;try{const username=$('username').value.trim().toLowerCase();const loginEmail=LOGIN_EMAILS[username];if(!loginEmail){$('auth-error').textContent='Use Joe or Captain as your username.';return;}await authApi.signInWithEmailAndPassword(auth,loginEmail,$('password').value);$('password').value='';}catch(err){$('auth-error').textContent=err.code==='auth/invalid-credential'?'Incorrect username or password.':err.message;}finally{b.disabled=false;}});$('sign-out').onclick=()=>authApi.signOut(auth);$('mobile-sign-out').onclick=()=>{if(confirm('Sign out of Our Space?'))authApi.signOut(auth);};$('home-review').onclick=()=>{$('notifications-modal').hidden=false;};window.addEventListener('offline',()=>{serverFresh=false;updateConnectionUI();});window.addEventListener('online',()=>{serverFresh=false;updateConnectionUI();});window.addEventListener('hashchange',()=>{if(location.hash.startsWith('#place-'))openDeepLink();else if(location.hash==='#map')navigate('map');else if(location.hash==='#home')navigate('home');});}
 // Music lives in a separate Firestore collection. Existing features are untouched.
 let musicTracks=[],musicReady=false,unsubscribeMusic=null,musicTab='current',musicSaving=false,musicPreviewData=null,musicUrlInputSerial=0,musicOpenTrackId=null,musicDeleting=false;
-// Older Firestore tracks may not have an artist field. Read-only metadata lookups
-// fill that information for the current session without rewriting shared records.
-const musicArtistCache=new Map(), musicArtistPending=new Set();
-let musicArtistLookups=0;
-function musicArtist(t){return String(t.artist||musicArtistCache.get(musicTrackUrl(t.spotifyUrl))||'').trim();}
-function fillLegacyMusicArtists(){
-  if(musicTab!=='collection')return;
-  for(const t of musicTracks){
-    if(musicArtistLookups>=3)break;
-    const url=musicTrackUrl(t.spotifyUrl);
-    if(!url||t.artist||musicArtistCache.has(url)||musicArtistPending.has(url))continue;
-    musicArtistPending.add(url);musicArtistLookups++;
-    musicMetadata(url).then(meta=>{
-      musicArtistCache.set(url,meta.artist||'');
-      if(musicTab==='collection')renderMusic();
-    }).catch(()=>musicArtistCache.set(url,''))
-      .finally(()=>{musicArtistPending.delete(url);musicArtistLookups--;fillLegacyMusicArtists();});
-  }
-}
-
+function musicArtist(t){return String(t.artist||'').trim();}
 const musicDemoKey='our-space-demo-music';
 function musicTrackUrl(input){
   try{const u=new URL(String(input).trim());if(u.protocol!=='https:'||u.hostname!=='open.spotify.com')return null;
@@ -473,9 +454,8 @@ function renderMusic(){
   $('music-current-panel').hidden=musicTab!=='current';$('music-collection-panel').hidden=musicTab!=='collection';
   const collection=$('music-collection');
   const previousScroll=collection.scrollTop;
-  collection.innerHTML=sorted.length?sorted.map(t=>`<button class="music-history-row" data-music-play="${escapeHtml(t.id)}" type="button"><span class="music-small-cover">${musicCover(t)}</span><span class="music-history-copy"><strong>${escapeHtml(t.title)}</strong><small class="music-artist">${escapeHtml(musicArtist(t)||(musicArtistCache.has(musicTrackUrl(t.spotifyUrl))?'Artist unavailable':'Finding artist…'))}</small></span><span class="music-history-play" aria-hidden="true">▶</span></button>`).join(''):'<div class="music-collection-empty">No shared tracks yet. Your collection will grow as you share new jams. 🎧</div>';
+  collection.innerHTML=sorted.length?sorted.map(t=>`<button class="music-history-row" data-music-play="${escapeHtml(t.id)}" type="button"><span class="music-small-cover">${musicCover(t)}</span><span class="music-history-copy"><strong>${escapeHtml(t.title)}</strong><small class="music-artist">${escapeHtml(musicArtist(t)||(t.ownerName+' · '+musicDate(t.createdAt)))}</small></span><span class="music-history-play" aria-hidden="true">▶</span></button>`).join(''):'<div class="music-collection-empty">No shared tracks yet. Your collection will grow as you share new jams. 🎧</div>';
   collection.scrollTop=previousScroll;
-  fillLegacyMusicArtists();
   document.querySelectorAll('[data-music-play]').forEach(btn=>btn.onclick=()=>openMusicPlayer(btn.dataset.musicPlay));
   $('music-shuffle').disabled=!sorted.length;
 }
@@ -509,7 +489,7 @@ async function deleteMusicTrack(){
   }catch(err){$('music-delete-error').textContent='Could not delete track: '+err.message;}
   finally{musicDeleting=false;btn.disabled=false;btn.textContent='Delete my share';}
 }
-async function musicMetadata(url){const response=await fetch('https://open.spotify.com/oembed?url='+encodeURIComponent(url));if(!response.ok)throw Error('Spotify artwork lookup unavailable');const data=await response.json();return {title:String(data.title||'Spotify track').slice(0,200),artist:String(data.author_name||'').slice(0,200),thumbnailUrl:String(data.thumbnail_url||'').startsWith('https://')?data.thumbnail_url:''};}
+async function musicMetadata(url){const response=await fetch('https://open.spotify.com/oembed?url='+encodeURIComponent(url));if(!response.ok)throw Error('Spotify artwork lookup unavailable');const data=await response.json();return {title:String(data.title||'Spotify track').slice(0,200),artist:'',thumbnailUrl:String(data.thumbnail_url||'').startsWith('https://')?data.thumbnail_url:''};}
 async function previewMusicLink(){const serial=++musicUrlInputSerial;musicPreviewData=null;const url=musicTrackUrl($('music-track-url').value);const el=$('music-preview');el.hidden=true;
   if(!url){$('music-form-feedback').textContent=$('music-track-url').value.trim()?'Paste a full Spotify track link (open.spotify.com/track/…).':'';return;}
   $('music-form-feedback').textContent='Finding the song and its artwork…';
@@ -526,7 +506,7 @@ async function submitMusic(e){e.preventDefault();if(musicSaving)return;
   try{
     let meta=(musicPreviewData?.spotifyUrl===url)?musicPreviewData:null;
     if(!meta){try{meta=await musicMetadata(url);}catch{meta={title:'Spotify track',thumbnailUrl:''};}}
-    const record={ownerUid:USER_UIDS[currentUser],ownerName:currentUser,spotifyUrl:url,spotifyId:musicTrackId(url),title:meta.title,artist:meta.artist||'',thumbnailUrl:meta.thumbnailUrl||'',note,createdAt:isDemo?new Date().toISOString():firestore.serverTimestamp()};
+    const record={ownerUid:USER_UIDS[currentUser],ownerName:currentUser,spotifyUrl:url,spotifyId:musicTrackId(url),title:meta.title,thumbnailUrl:meta.thumbnailUrl||'',note,createdAt:isDemo?new Date().toISOString():firestore.serverTimestamp()};
     if(isDemo){musicTracks.push({...record,id:crypto.randomUUID()});localStorage.setItem(musicDemoKey,JSON.stringify(musicTracks));renderMusic();}
     else await firestore.addDoc(firestore.collection(db,'musicTracks'),record);
     $('music-share-modal').hidden=true;notify('Shared your current jam 🎧');musicTab='current';renderMusic();
