@@ -190,12 +190,26 @@ html{-webkit-tap-highlight-color:transparent}
 /* Our Dodo: a tiny home beside the homepage greeting, never floating over controls. */
 .home-intro-row{display:flex;align-items:center;justify-content:space-between;gap:16px;min-width:0}
 .home-intro-row h1{flex:1;min-width:0;margin:10px 0}
-.dodo-home{position:relative;display:block;flex:none;width:clamp(108px,12vw,144px);height:clamp(100px,10.5vw,125px);padding:0;border:1px solid #e2e4d6;border-radius:20px;background:linear-gradient(165deg,#f4f1e5 5%,#e8eee0 76%);overflow:hidden;cursor:pointer;isolation:isolate;touch-action:manipulation;box-shadow:0 4px 16px #46573b0a}
+.dodo-home{position:relative;display:block;flex:none;width:clamp(108px,12vw,144px);height:clamp(100px,10.5vw,125px);padding:0;border:1px solid #dce2d3;border-radius:20px;background:linear-gradient(180deg,#dbeef8 0%,#edf7ff 34%,#f7f4ea 67%,#e3ead8 100%);overflow:hidden;cursor:pointer;isolation:isolate;touch-action:manipulation;box-shadow:0 4px 16px #46573b0a, inset 0 1px 0 #ffffff88}
+.dodo-home::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,#ffffff44 0%,transparent 40%,transparent 100%);pointer-events:none;z-index:0}
 .dodo-home:focus-visible{outline:3px solid #8cb49a;outline-offset:3px}
-.dodo-home-sun{position:absolute;top:11px;right:13px;width:18px;height:18px;background:#f1ddb0;border-radius:50%;opacity:.85}
-.dodo-home-hill{position:absolute;left:-16%;right:-16%;height:36%;bottom:-15%;background:#d5e3cd;border-radius:50% 50% 0 0}
-.dodo-home-shadow{position:absolute;left:50%;bottom:10%;width:46%;height:8%;transform:translateX(-50%);background:#728b7640;border-radius:50%;filter:blur(4px);pointer-events:none}
-.dodo-home-character{position:absolute;inset:0;display:block;will-change:auto;pointer-events:none}
+.dodo-home-sun{position:absolute;top:11px;right:13px;width:18px;height:18px;background:radial-gradient(circle at 35% 35%,#fff4c8 0 28%,#f5df92 42%,#efcf6f 74%,#e7c661 100%);border-radius:50%;opacity:.85;box-shadow:0 0 0 5px #f7e6aa3b;z-index:1}
+.dodo-home-cloud{position:absolute;height:8px;border-radius:999px;background:#ffffffb8;filter:blur(.2px);opacity:.62;z-index:1}
+.dodo-home-cloud::before,.dodo-home-cloud::after{content:'';position:absolute;background:#ffffffc2;border-radius:50%}
+.dodo-home-cloud-one{top:18px;left:18px;width:20px}
+.dodo-home-cloud-one::before{width:11px;height:11px;left:2px;top:-5px}
+.dodo-home-cloud-one::after{width:9px;height:9px;right:2px;top:-3px}
+.dodo-home-cloud-two{top:28px;left:40px;width:16px;opacity:.52}
+.dodo-home-cloud-two::before{width:10px;height:10px;left:1px;top:-4px}
+.dodo-home-cloud-two::after{width:8px;height:8px;right:1px;top:-2px}
+.dodo-home-tree{position:absolute;left:12px;bottom:25px;width:18px;height:44px;opacity:.34;z-index:1}
+.dodo-home-tree::before{content:'';position:absolute;left:7px;bottom:0;width:4px;height:18px;border-radius:4px;background:#7f8f70}
+.dodo-home-tree::after{content:'';position:absolute;left:-2px;bottom:12px;width:24px;height:24px;border-radius:52% 48% 50% 50%;background:radial-gradient(circle at 35% 35%,#cfe2c6 0%,#b7cbb0 58%,#a5b89e 100%);box-shadow:-8px 5px 0 -1px #bdcfb5,7px 6px 0 -2px #b4c7ac}
+.dodo-home-hill{position:absolute;left:-16%;right:-16%;height:38%;bottom:-17%;background:linear-gradient(180deg,#dbe7d4 0%,#c7d8bf 100%);border-radius:50% 50% 0 0;z-index:1}
+.dodo-home-grass{position:absolute;left:-8%;right:-8%;bottom:-4px;height:26%;background:linear-gradient(180deg,#bfd8ab 0%,#9fbd8a 100%);border-radius:48% 48% 0 0;z-index:2}
+.dodo-home-grass::after{content:'';position:absolute;left:10%;right:14%;top:8px;height:10px;border-radius:50%;background:radial-gradient(circle at 20% 50%,#8cab7d 0 9%,transparent 11%),radial-gradient(circle at 47% 50%,#90af81 0 8%,transparent 10%),radial-gradient(circle at 73% 50%,#8cab7d 0 9%,transparent 11%),radial-gradient(circle at 89% 50%,#95b287 0 7%,transparent 9%);opacity:.55}
+.dodo-home-shadow{position:absolute;left:50%;bottom:13%;width:46%;height:8%;transform:translateX(-50%);background:#728b7640;border-radius:50%;filter:blur(4px);pointer-events:none;z-index:3}
+.dodo-home-character{position:absolute;inset:0;display:block;will-change:auto;pointer-events:none;z-index:4}
 .dodo-home-sprite{display:block;width:100%;height:100%;background-repeat:no-repeat;background-position:0 0;pointer-events:none}
 @media(max-width:760px){.home-intro{margin:18px 0 25px}.home-intro-row{gap:6px}.home-intro-row h1{font-size:clamp(38px,9.3vw,68px);letter-spacing:-1.8px;white-space:nowrap}.dodo-home{width:clamp(108px,28vw,130px);height:clamp(100px,26vw,120px);border-radius:19px}}
 @media(max-width:365px){.home-intro-row h1{font-size:36px}.dodo-home{width:104px;height:98px}}
@@ -360,7 +374,11 @@ body.dodo-world-opened .dodo-home-character{visibility:hidden}
 .cinematic-intro-card{position:relative;width:min(100%,860px);aspect-ratio:16/9;max-height:min(66dvh,510px);overflow:hidden;isolation:isolate;background:#dae9dd;border:1px solid #e2e4d6;border-radius:25px;box-shadow:0 22px 72px #55554722;flex:none;will-change:top,left,width,height,border-radius,opacity}
 .cinematic-intro-video{display:block;width:100%;height:100%;object-fit:cover;object-position:center;background:#c7ded3}
 .cinematic-intro-skip{position:absolute;right:0;top:0;border:1px solid #e8e2d9;background:#fffdfb;color:#8d7d71;border-radius:100px;font:700 12px 'DM Sans',sans-serif;padding:10px 16px;cursor:pointer;box-shadow:0 3px 14px #2d2d2510;-webkit-tap-highlight-color:transparent;transition:opacity .2s}
-.cinematic-intro-skip:focus-visible{outline:3px solid #94ba9e;outline-offset:3px}
+.cinematic-intro-skip:focus-visible,.cinematic-intro-replay:focus-visible{outline:3px solid #94ba9e;outline-offset:3px}
+.cinematic-intro-replay{margin:8px 14px 0;width:calc(100% - 28px);display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px dashed #dfd5c8;border-radius:12px;background:#fffaf4;color:#8a6a5b;text-align:left;font-size:12px;font-weight:750}
+.cinematic-intro-replay span{flex:1}
+.cinematic-intro-replay small{font-size:9px;color:#b48e79;letter-spacing:.55px}
+.cinematic-intro-replay:hover{background:#fff2e6}
 body.cinematic-intro-playing{overflow:hidden}
 body.cinematic-intro-playing .dodo-home-character{visibility:hidden!important}
 body.cinematic-intro-playing .dodo-home-hint{visibility:hidden!important}
@@ -378,36 +396,3 @@ body.cinematic-intro-playing .dodo-home-hint{visibility:hidden!important}
 }
 @media(max-height:570px) and (orientation:landscape){.cinematic-intro-layout{gap:8px;height:calc(100dvh - 14px)}.cinematic-intro-heading{position:absolute;left:0;top:4px;z-index:2}.cinematic-intro-wordmark{font-size:25px}.cinematic-intro-eyebrow{font-size:8px}.cinematic-intro-card{max-height:84dvh;max-width:64vw}.cinematic-intro-skip{top:5px}}
 @media(prefers-reduced-motion:reduce){.cinematic-intro,.cinematic-intro-card,.cinematic-intro-heading{transition:none!important}}
-
-
-/* 16 Nov update — quietly retire the temporary launch links; preserve Dodo World code. */
-#dodo-world-open[hidden]{display:none!important}
-
-/* Music collection: scroll the tracks, not the entire page. */
-#music-view .music-collection{
-  max-height:clamp(300px,55dvh,540px);
-  overflow-y:auto;
-  overscroll-behavior:contain;
-  scrollbar-width:thin;
-  scrollbar-color:#698673 #1a2920;
-  padding:2px 7px 3px 1px;
-  align-content:start;
-}
-#music-view .music-collection::-webkit-scrollbar{width:7px}
-#music-view .music-collection::-webkit-scrollbar-track{background:#1a2920;border-radius:99px}
-#music-view .music-collection::-webkit-scrollbar-thumb{background:#698673;border-radius:99px}
-#music-view .music-collection-total{
-  display:inline-block;margin-left:7px;vertical-align:middle;
-  font:700 11px 'DM Sans',sans-serif;color:#b7d0bc;
-  background:#263b2c;border:1px solid #3c5942;border-radius:999px;
-  padding:5px 9px;letter-spacing:0;white-space:nowrap;
-}
-#music-view .music-history-copy strong{line-height:1.25}
-#music-view .music-history-copy .music-artist{font-size:12px;color:#b5caba;line-height:1.3}
-#music-view .music-history-row{min-height:75px}
-@media(max-width:600px){
-  #music-view .music-collection{max-height:52dvh;min-height:0}
-  #music-view .music-collection-total{margin-left:3px;font-size:10px;padding:4px 7px}
-  #music-view .music-history-row{gap:10px;padding:9px}
-  #music-view .music-small-cover{width:52px;height:52px}
-}
