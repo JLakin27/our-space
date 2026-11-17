@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf7f1">
+  <meta name="description" content="A little something for two. Install Our Space to discover what's inside.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" href="./icons/favicon-48.png">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <title>A little something for you · Our Space</title>
+  <style>
+    :root{color-scheme:light;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--ink:#302e2b;--muted:#77716c;--peach:#d58c75;--cream:#faf7f1}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100svh;display:grid;place-items:center;background:radial-gradient(circle at 50% 15%,#fffdf8 0%,#faf7f1 53%,#f1ede5 100%);color:var(--ink);padding:clamp(16px,4vw,36px)}
+    main{width:min(100%,430px);text-align:center;padding:clamp(25px,6vw,42px) clamp(22px,6vw,35px);border:1px solid #ebe2d6;border-radius:30px;background:#fffdfaee;box-shadow:0 20px 60px #887b6918,0 5px 15px #887b690b}
+    .eyebrow{font-size:11px;letter-spacing:.17em;font-weight:800;color:#c2826d;margin:0 0 8px}
+    h1{font-size:clamp(34px,9vw,47px);line-height:1.1;letter-spacing:-.055em;margin:0;font-weight:800}
+    h1 span{color:var(--peach)}
+    .icon{display:block;width:clamp(138px,42vw,176px);height:auto;aspect-ratio:1/1;object-fit:cover;border-radius:30px;box-shadow:0 10px 23px #4c5c4a1f;margin:27px auto 23px}
+    .lead{margin:0 0 8px;font-size:17px;font-weight:650;line-height:1.5}
+    .sub{margin:0 auto 25px;color:var(--muted);font-size:14px;line-height:1.6;max-width:290px}
+    button{font:inherit;cursor:pointer}
+    .install{border:0;display:flex;gap:9px;align-items:center;justify-content:center;width:100%;padding:15px 18px;color:white;background:#ce896f;border-radius:999px;font-weight:750;font-size:15px;box-shadow:0 7px 14px #bf7a6125;transition:background .15s ease,transform .15s ease}
+    .install:hover{background:#bc795f}.install:active{transform:scale(.985)}.install:focus-visible,.help-toggle:focus-visible{outline:3px solid #688f79;outline-offset:4px}
+    .help-toggle{display:inline-block;margin:16px 0 0;background:none;border:0;color:#776f69;font-weight:650;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+    .instructions{margin-top:19px;border:1px solid #e5e4d6;border-radius:18px;background:#f4f5ee;text-align:left;padding:18px;color:#454840}
+    .instructions[hidden],.status[hidden]{display:none}
+    .instructions h2{font-size:15px;margin:0 0 10px}.instructions ol{margin:0;padding-left:20px;font-size:13px;line-height:1.8}.instructions p{font-size:13px;line-height:1.6;margin:10px 0 0}
+    .status{font-size:13px;color:#53745f;margin:13px 0 0;line-height:1.6}
+    footer{margin-top:24px;font-size:11px;color:#99918b}
+    @media(prefers-reduced-motion:reduce){.install{transition:none}}
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">A LITTLE SOMETHING FOR YOU</p>
+    <h1>Our space<span>.</span></h1>
+    <img class="icon" src="./icons/icon-512.png" alt="Our Space app icon featuring Dodo" width="176" height="176">
+    <p class="lead">Made for two. 🦤❤️</p>
+    <p class="sub">Install it first, then open it from your phone for a little surprise.</p>
+    <button type="button" class="install" id="install-btn"><span aria-hidden="true">↓</span> Install Our Space</button>
+    <p id="status" class="status" role="status" aria-live="polite" hidden></p>
+    <button type="button" class="help-toggle" id="help-toggle" aria-expanded="false" aria-controls="instructions">Having trouble installing?</button>
+    <section class="instructions" id="instructions" hidden>
+      <h2>Install on your phone</h2>
+      <div id="manual-steps"></div>
+      <p><strong>Already installed?</strong> Look for Dodo in your app drawer or home screen, then open Our Space from there.</p>
+    </section>
+    <footer>Just for us. The surprise is inside. ✨</footer>
+  </main>
+  <script>
+    (()=>{
+      const installBtn=document.getElementById('install-btn');
+      const toggle=document.getElementById('help-toggle');
+      const steps=document.getElementById('manual-steps');
+      const instructions=document.getElementById('instructions');
+      const status=document.getElementById('status');
+      let installPrompt=null;
+      let installed=window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
+      const isiOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+      function showHelp(){
+        if(isiOS){steps.innerHTML='<ol><li>Open this invitation in <strong>Safari</strong>.</li><li>Tap the <strong>Share</strong> button.</li><li>Choose <strong>Add to Home Screen</strong>, then <strong>Add</strong>.</li></ol>';}
+        else{steps.innerHTML='<ol><li>Open this invitation in <strong>Chrome</strong> (not inside WhatsApp).</li><li>Tap Chrome’s <strong>⋮</strong> menu.</li><li>Choose <strong>Add to Home screen</strong> or <strong>Install app</strong>, then confirm.</li></ol>';}
+        instructions.hidden=false;toggle.setAttribute('aria-expanded','true');
+      }
+      window.addEventListener('beforeinstallprompt',(e)=>{e.preventDefault();installPrompt=e;});
+      window.addEventListener('appinstalled',()=>{installed=true;installPrompt=null;status.textContent='Installed! Look for the Dodo icon on your home screen and open it from there. 🦤';status.hidden=false;});
+      toggle.addEventListener('click',()=>{if(instructions.hidden)showHelp();else{instructions.hidden=true;toggle.setAttribute('aria-expanded','false');}});
+      installBtn.addEventListener('click',async()=>{
+        if(installed){status.textContent='Already installed? Open Our Space using the Dodo icon on your home screen. 🦤';status.hidden=false;return;}
+        if(installPrompt){
+          const prompt=installPrompt;installPrompt=null;
+          try{await prompt.prompt();const choice=await prompt.userChoice;
+            if(choice?.outcome==='accepted'){status.textContent='Lovely! Once it’s installed, open Our Space from your app drawer or home screen. 🦤';status.hidden=false;}
+            else{status.textContent='No problem — you can install it whenever you like.';status.hidden=false;showHelp();}
+          }catch(_){showHelp();}
+        }else{status.textContent='Use your browser’s install option below — the app itself will stay a surprise until you open it.';status.hidden=false;showHelp();}
+      });
+      if('serviceWorker' in navigator){navigator.serviceWorker.register('./service-worker.js',{scope:'./'}).catch(()=>{});}
+    })();
+  </script>
+</body>
+</html>

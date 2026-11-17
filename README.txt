@@ -1,20 +1,18 @@
-OUR SPACE — DODO WHEEL SEGMENTS FIX (17 NOV 2026)
+OUR SPACE — SPOILER-FREE INSTALLATION INVITATION
 
-Based on the app.js in our-space-fixes-17nov.zip (the last Travel & Checklist fix).
+In your existing GitHub repository, ADD ONLY:
+  install.html (to the repository root, alongside index.html)
 
-UPLOAD TO GITHUB:
-Replace app.js in the root of your repository.
-Do not replace any other files. No Firebase rules change.
+This page uses the PWA manifest and icons already installed in your repository.
+It does not change the real Our Space app, Firebase, login, service worker, or the Dodo videos.
 
-FIX:
-The wheel previously showed four CSS placeholder segments until a spin.
-It now draws one segment per approved (unfinished) checklist idea as soon
-as Firestore loads the list, whenever the list changes, and when returning
-to the page. If the list changes during a spin, the wheel updates after
-that spin finishes.
+Invitation link once GitHub Pages has deployed:
+https://jlakin27.github.io/our-space/install.html
 
-TEST:
-1. Open Our places to without spinning: segment count should match the
-   approved item count, not pending suggestions or completed items.
-2. Add/approve an idea and return to the page: count should update.
-3. Spin: it should still choose from approved items only.
+When Chrome supports an in-page install prompt, the Install Our Space button opens it.
+Otherwise the button reveals manual installation instructions without navigating to the app.
+Android Chrome may choose not to expose the in-page prompt even when the browser menu can install the app.
+On Android, the recipient should open the link in Chrome itself, not an in-app browser.
+
+The actual app continues to launch at its normal homepage according to your existing manifest.
+This page is public, but it contains no private content.
