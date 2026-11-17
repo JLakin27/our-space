@@ -566,6 +566,8 @@ function renderPlacesTo(){
   $('suggested-place-count').textContent=suggested.length;
   $('done-place-count').textContent=done.length;
   $('places-surprise').disabled=!approved.length||dodoSpinning;
+  // Keep the wheel in sync with the live approved list, not just when spinning.
+  updateDodoWheelSegments(approved.length);
   placesToStatus();
   const records={approved,suggested,done}[placesToTab],root=$('places-to-list');
   root.replaceChildren();
@@ -654,6 +656,15 @@ async function markPlaceDone(p){if(!confirm(`Tick off “${p.name}”? It’ll m
 // The label is derived from the wheel's *rendered rotation*, so it slows down
 // alongside the wheel instead of cycling independently at a fixed speed.
 let dodoSpinning=false,dodoRotation=0,dodoFrame=null,dodoTimeout=null;
+const dodoWheelPalette=['#e9b699','#e4dbc3','#b9d3c4','#d8c4db','#f2d9bc','#c7dce7'];
+function updateDodoWheelSegments(count){
+  // Do not change the wheel while it is spinning: its options are snapshotted for that spin.
+  if(dodoSpinning)return;
+  const wheel=$('dodo-wheel');
+  if(!wheel)return;
+  if(!count){wheel.style.background='conic-gradient(#e8e1d7 0% 100%)';return;}
+  wheel.style.background=`conic-gradient(${Array.from({length:count},(_,i)=>`${dodoWheelPalette[i%dodoWheelPalette.length]} ${i*100/count}% ${(i+1)*100/count}%`).join(',')})`;
+}
 function closeDodoResult(){$('dodo-result-modal').hidden=true;}
 function chooseDodo(){
   if(dodoSpinning)return;
@@ -662,8 +673,7 @@ function chooseDodo(){
   dodoSpinning=true;
   const btn=$('places-surprise');btn.disabled=true;btn.textContent='The dodo is thinking…';
   const wheel=$('dodo-wheel'),cycling=$('dodo-cycling'),n=options.length;
-  const palette=['#e9b699','#e4dbc3','#b9d3c4','#d8c4db','#f2d9bc','#c7dce7'];
-  wheel.style.background=`conic-gradient(${options.map((_,i)=>`${palette[i%palette.length]} ${i*100/n}% ${(i+1)*100/n}%`).join(',')})`;
+  wheel.style.background=`conic-gradient(${options.map((_,i)=>`${dodoWheelPalette[i%dodoWheelPalette.length]} ${i*100/n}% ${(i+1)*100/n}%`).join(',')})`;
   const selection=Math.floor(Math.random()*n),chosen=options[selection];
   const motionAllowed=!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(dodoFrame!==null){cancelAnimationFrame(dodoFrame);dodoFrame=null;}
@@ -701,6 +711,7 @@ function chooseDodo(){
     dodoTimeout=null;
     cycling.textContent=chosen.name;
     dodoSpinning=false;btn.textContent='Let the dodo decide ↗';
+    updateDodoWheelSegments(placesTo.filter(p=>p.status==='approved').length);
     btn.disabled=!placesTo.some(p=>p.status==='approved');
     $('dodo-result-name').textContent=chosen.name;
     $('dodo-result-modal').hidden=false;
