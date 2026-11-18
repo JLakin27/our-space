@@ -425,3 +425,30 @@ body.cinematic-intro-playing .dodo-home-hint{visibility:hidden!important}
   #music-view .music-history-row{gap:10px;padding:9px}
   #music-view .music-small-cover{width:52px;height:52px}
 }
+
+/* A little letter: tucked away after reading, with a soft envelope reveal. */
+.letter-inbox-footer{padding-top:11px;border-top:1px solid #eee6de;margin-top:12px;display:flex;justify-content:center}
+.letter-footer-button{border:1px solid #ead6c7;border-radius:999px;background:#fff7f2;padding:10px 17px;color:#a56b59;font:700 12px DM Sans,sans-serif;cursor:pointer}
+.letter-footer-button:hover{background:#fcece2}
+.letter-notification{border-color:#e9c5b0;background:#fff2e9}
+.letter-compose-modal textarea{width:100%;resize:vertical;min-height:190px;line-height:1.65}
+.letter-reader-backdrop{z-index:2350;background:#31282bbb}
+.letter-reader-modal{max-width:480px;max-height:min(90dvh,850px);overflow-y:auto;text-align:center;background:linear-gradient(170deg,#fdf5ee,#fffaf5);padding:28px 22px 24px}
+.letter-reader-modal h2{font-family:Outfit,sans-serif;font-size:27px;margin:6px 20px 8px}
+.letter-envelope-scene{height:120px;position:relative;display:grid;place-items:center;margin-top:7px;perspective:600px}
+.letter-envelope{position:relative;width:160px;height:93px;filter:drop-shadow(0 8px 8px #734d362a)}
+.letter-envelope-back{position:absolute;inset:0;border-radius:5px;background:linear-gradient(155deg,#f3d3c0,#dfaf99);clip-path:polygon(0 0,100% 0,100% 100%,0 100%)}
+.letter-envelope-back:after{content:'';position:absolute;inset:0;background:#eec4ad;clip-path:polygon(0 100%,50% 35%,100% 100%)}
+.letter-envelope-flap{position:absolute;top:0;left:0;right:0;height:58px;background:#f7dccb;clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top center;z-index:2;transition:transform .75s ease}
+.letter-envelope-seal{position:absolute;top:24px;left:calc(50% - 14px);z-index:3;font-size:21px;transition:opacity .4s}
+.letter-sheet{width:100%;max-width:390px;margin:-3px auto 18px;opacity:0;transform:translateY(-48px) scaleY(.75);transform-origin:top center;transition:opacity .6s ease .35s,transform .95s cubic-bezier(.2,.7,.2,1) .3s}
+.letter-sheet.letter-opened{opacity:1;transform:translateY(0) scaleY(1)}
+.letter-sheet-inside{background:#fffdf9;border:1px solid #eddfce;box-shadow:0 9px 24px #805d3a19;border-radius:4px;padding:27px 25px 29px;text-align:left;max-height:45dvh;overflow-y:auto}
+.letter-paper-heading{font-family:Georgia,serif;font-style:italic;color:#a97666;font-size:17px;margin-bottom:22px}
+.letter-paper-body{white-space:pre-wrap;overflow-wrap:anywhere;font-family:Georgia,serif;font-size:16px;line-height:1.85;color:#55473f}
+.letter-reader-done{width:100%;max-width:390px}
+@media(prefers-reduced-motion:reduce){.letter-envelope-flap,.letter-sheet{transition:none}}
+@media(max-width:480px){.letter-reader-modal{padding:24px 15px}.letter-sheet-inside{padding:23px 19px}.letter-paper-body{font-size:15px}}
+
+.letter-reader-modal.letter-revealed .letter-envelope-flap{transform:rotateX(170deg)}
+.letter-reader-modal.letter-revealed .letter-envelope-seal{opacity:0}

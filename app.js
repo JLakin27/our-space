@@ -162,8 +162,84 @@ function closeKissCelebration(){
   $('kiss-celebration').hidden=true;
   $('kiss-celebration-scene').classList.remove('kiss-animate');
 }
+
+/* ONE-OFF PRIVATE LETTER — not a general messaging feature.
+   Joe may create exactly one document; Noémie can read and keep it. */
+const LETTER_ID='first-for-noemie';
+let specialLetter=null, unsubscribeLetter=null, letterSending=false, letterMarking=false;
+const unreadLetterCount=()=>currentUser==='Noémie'&&specialLetter&&!specialLetter.readAt?1:0;
+function renderLetterActions(){
+  const composer=$('letter-compose-open'),keepsakes=$('letter-keepsakes-open');
+  if(!composer||!keepsakes)return;
+  composer.hidden=currentUser!=='Joe'||!!specialLetter;
+  keepsakes.hidden=currentUser!=='Noémie'||!specialLetter?.readAt;
+}
+function letterChanged(){renderLetterActions();refreshNotificationsWithKisses();}
+function startLetterListener(){
+  if(unsubscribeLetter){unsubscribeLetter();unsubscribeLetter=null;}
+  specialLetter=null;letterChanged();
+  if(isDemo){try{specialLetter=JSON.parse(localStorage.getItem('our-space-demo-first-letter')||'null');}catch{}letterChanged();return;}
+  unsubscribeLetter=firestore.onSnapshot(firestore.doc(db,'letters',LETTER_ID),snap=>{
+    specialLetter=snap.exists()?{id:snap.id,...snap.data()}:null;
+    letterChanged();
+  },err=>{notify('Letter could not load: '+err.message);});
+}
+function closeLetterModal(){$('letter-reader-modal').hidden=true;$('letter-sheet').classList.remove('letter-opened');$('letter-reader-modal').classList.remove('letter-revealed');}
+async function openLetter(){
+  if(currentUser!=='Noémie'||!specialLetter)return;
+  $('notifications-modal').hidden=true;
+  $('letter-paper-body').textContent=specialLetter.body||'';
+  $('letter-reader-modal').hidden=false;
+  $('letter-sheet').classList.remove('letter-opened');$('letter-reader-modal').classList.remove('letter-revealed');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{$('letter-sheet').classList.add('letter-opened');$('letter-reader-modal').classList.add('letter-revealed');}));
+  if(specialLetter.readAt||letterMarking)return;
+  letterMarking=true;
+  try{
+    if(isDemo){specialLetter.readAt=new Date().toISOString();localStorage.setItem('our-space-demo-first-letter',JSON.stringify(specialLetter));letterChanged();}
+    else await firestore.updateDoc(firestore.doc(db,'letters',LETTER_ID),{readAt:firestore.serverTimestamp()});
+  }catch(err){notify('The letter opened, but could not mark as read: '+err.message);}
+  finally{letterMarking=false;}
+}
+function openLetterComposer(){
+  if(currentUser!=='Joe'||specialLetter)return;
+  $('letter-form').reset();$('letter-compose-error').textContent='';
+  $('notifications-modal').hidden=true;$('letter-compose-modal').hidden=false;
+}
+async function sendSpecialLetter(e){
+  e.preventDefault();if(letterSending||currentUser!=='Joe'||specialLetter)return;
+  const body=$('letter-message').value.trim();
+  if(!body||body.length>5000){$('letter-compose-error').textContent='Write a letter of up to 5,000 characters.';return;}
+  if(!isDemo&&!canWrite()){$('letter-compose-error').textContent='Please wait until Connected appears.';return;}
+  if(!confirm('Send this one-off letter to Noémie? Once sent, it cannot be edited or unsent.'))return;
+  letterSending=true;const btn=$('letter-send');btn.disabled=true;btn.textContent='Delivering…';
+  try{
+    if(isDemo){specialLetter={fromUid:USER_UIDS.Joe,toUid:USER_UIDS['Noémie'],body,createdAt:new Date().toISOString(),readAt:null};localStorage.setItem('our-space-demo-first-letter',JSON.stringify(specialLetter));letterChanged();}
+    else await firestore.setDoc(firestore.doc(db,'letters',LETTER_ID),{
+      fromUid:USER_UIDS.Joe,toUid:USER_UIDS['Noémie'],body,
+      createdAt:firestore.serverTimestamp(),readAt:null
+    });
+    $('letter-compose-modal').hidden=true;notify('Your little letter has been delivered 💌');
+  }catch(err){$('letter-compose-error').textContent='Could not deliver: '+err.message;}
+  finally{letterSending=false;btn.disabled=false;btn.textContent='Send little letter 💌';}
+}
+function bindLetters(){
+  $('letter-compose-open').onclick=openLetterComposer;
+  $('letter-keepsakes-open').onclick=()=>{$('notifications-modal').hidden=true;openLetter();};
+  $('letter-compose-close').onclick=()=>$('letter-compose-modal').hidden=true;
+  $('letter-compose-cancel').onclick=()=>$('letter-compose-modal').hidden=true;
+  $('letter-reader-close').onclick=closeLetterModal;
+  $('letter-reader-done').onclick=closeLetterModal;
+  $('letter-form').onsubmit=sendSpecialLetter;
+  ['letter-reader-modal','letter-compose-modal'].forEach(id=>$(id).addEventListener('click',e=>{
+    if(e.target!==$(id))return;
+    if(id==='letter-reader-modal')closeLetterModal();else $(id).hidden=true;
+  }));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLetterModal();$('letter-compose-modal').hidden=true;}});
+  renderLetterActions();
+}
+
 function refreshNotificationsWithKisses(){
-  const count=incoming().length+placesToIncoming().length+pendingKisses().length;
+  const count=incoming().length+placesToIncoming().length+pendingKisses().length+unreadLetterCount();
   $('notifications-count').textContent=count;
   $('notifications-btn').classList.toggle('has-new',count>0);
   refreshHome();renderNotifications();
@@ -190,11 +266,12 @@ function bindProfiles(){
 function refreshHome(){
   const greeting=$('home-greeting');if(!greeting)return;
   greeting.textContent=currentUser==='Noémie'?'HEY, CAPTAIN 👀':'HEY, JOE 👋';
-  const pendingTrips=incoming().length,pendingIdeas=placesToIncoming().length,pendingKissCount=pendingKisses().length,total=pendingTrips+pendingIdeas+pendingKissCount;
+  const pendingTrips=incoming().length,pendingIdeas=placesToIncoming().length,pendingKissCount=pendingKisses().length,total=pendingTrips+pendingIdeas+pendingKissCount+unreadLetterCount();
   const inboxSummary=[];
   if(pendingTrips>0)inboxSummary.push(`${pendingTrips} trip ${pendingTrips===1?'suggestion':'suggestions'}`);
   if(pendingIdeas>0)inboxSummary.push(`${pendingIdeas} list ${pendingIdeas===1?'idea':'ideas'}`);
   if(pendingKissCount>0)inboxSummary.push(`${pendingKissCount} ${pendingKissCount===1?'kiss':'kisses'} waiting for you`);
+  if(unreadLetterCount())inboxSummary.push('a little letter waiting for you 💌');
   $('home-attention').textContent=inboxSummary.length?inboxSummary.join(' · '):'All caught up — nothing new right now.';
   // Firebase listeners already refresh the map and checklist arrays; counts remain live even while collapsed.
   $('kpi-to-visit').textContent=pins.filter(p=>stateOf(p)==='approved').length;
@@ -317,7 +394,7 @@ function toggleMapExpanded(){
   $('map-expand').setAttribute('aria-pressed',String(mapExpanded));
   setTimeout(()=>map.invalidateSize(),70);
 }
-function render(){const suggestions=pins.filter(p=>stateOf(p)==='suggested'),approved=pins.filter(p=>stateOf(p)==='approved'),visited=pins.filter(p=>stateOf(p)==='visited');$('wishlist-count').textContent=suggestions.length;$('agreed-count').textContent=approved.length;$('done-count').textContent=visited.length;$('notifications-count').textContent=incoming().length+placesToIncoming().length+pendingKisses().length;$('notifications-btn').classList.toggle('has-new',incoming().length+placesToIncoming().length+pendingKisses().length>0);
+function render(){const suggestions=pins.filter(p=>stateOf(p)==='suggested'),approved=pins.filter(p=>stateOf(p)==='approved'),visited=pins.filter(p=>stateOf(p)==='visited');$('wishlist-count').textContent=suggestions.length;$('agreed-count').textContent=approved.length;$('done-count').textContent=visited.length;$('notifications-count').textContent=incoming().length+placesToIncoming().length+pendingKisses().length+unreadLetterCount();$('notifications-btn').classList.toggle('has-new',incoming().length+placesToIncoming().length+pendingKisses().length+unreadLetterCount()>0);
   if(clusterGroup){clusterGroup.clearLayers();savedMarkers.clear();}
   for(const place of pins.filter(tripFilterMatches)){
     if(!Number.isFinite(place.lat)||!Number.isFinite(place.lng))continue;
@@ -349,7 +426,9 @@ async function saveDescription(){
 async function sharePlace(p){const url=new URL(location.href);url.hash='place-'+encodeURIComponent(p.id);const msg=`${nameFor(p)} suggested ${p.name} 🌍 — are you up for it? 👀\n${url.href}`;if(navigator.share){try{await navigator.share({text:msg});return;}catch(e){if(e.name==='AbortError')return;}}try{await navigator.clipboard.writeText(msg);notify('Message copied — paste it into WhatsApp!');}catch{window.prompt('Copy this message for WhatsApp:',msg);}}
 function renderNotifications(){
   const list=$('notifications-list');list.replaceChildren();const items=incoming(),extra=placesToIncoming(),mail=pendingKisses();
-  if(!items.length&&!extra.length&&!mail.length){list.innerHTML='<p class="empty">All caught up for now.</p>';return;}
+  renderLetterActions();
+  if(unreadLetterCount()){const b=document.createElement('button');b.className='notification-row letter-notification';b.innerHTML='<strong>💌 A little letter from Joe</strong><span>Something just for you · Tap to open</span>';b.onclick=openLetter;list.append(b);}
+  if(!items.length&&!extra.length&&!mail.length&&!unreadLetterCount()){list.innerHTML='<p class="empty">All caught up for now.</p>';return;}
   for(const k of mail){const b=document.createElement('button');b.className='notification-row kiss-notification';b.innerHTML=`<strong>😘 A little delivery from ${escapeHtml(nameForUid(k.fromUid)||'someone special')}</strong><span>Tap to open your kiss</span>`;b.onclick=()=>dismissKiss(k);list.append(b);}
   for(const p of extra){const b=document.createElement('button');b.className='notification-row';b.innerHTML=`<strong>😈 ${escapeHtml(p.name)}</strong><span>${escapeHtml(p.addedBy)} suggested a new list idea · Review →</span>`;b.onclick=()=>{$('notifications-modal').hidden=true;placesToTab='suggested';navigate('places');setPlacesTab('suggested');};list.append(b);}
   for(const p of items){const b=document.createElement('button');b.className='notification-row';b.innerHTML=`<strong>${escapeHtml(p.name)}</strong><span>${escapeHtml(nameFor(p))} suggested this trip · Review →</span>`;b.onclick=()=>{$('notifications-modal').hidden=true;navigate('map');openDetails(p.id);};list.append(b);}
@@ -415,12 +494,12 @@ function startListening(){
     notify('Database connection failed: '+err.message);
   });
 }
-async function initFirebase(){const [appSdk,authSdk,dbSdk]=await Promise.all([import('https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js')]);firestore=dbSdk;authApi=authSdk;const app=appSdk.initializeApp(firebaseConfig);auth=authSdk.getAuth(app);db=dbSdk.getFirestore(app);authSdk.onAuthStateChanged(auth,async user=>{if(unsubscribe){unsubscribe();unsubscribe=null;}if(unsubscribePlacesTo){unsubscribePlacesTo();unsubscribePlacesTo=null;}if(unsubscribeProfiles){unsubscribeProfiles();unsubscribeProfiles=null;}if(unsubscribeKisses){unsubscribeKisses();unsubscribeKisses=null;}if(unsubscribeMusic){unsubscribeMusic();unsubscribeMusic=null;}musicTracks=[];musicReady=false;renderMusic();profilesReady=false;kissesReady=false;sharedProfiles={};kisses=[];placesToFresh=false;if(!user){window.OurSpaceIntro?.cancel();serverFresh=false;hasPendingWrites=false;everConnected=false;writeInProgress=false;pins=[];placesTo=[];render();renderPlacesTo();$('auth-modal').hidden=false;document.body.classList.remove('auth-pending');$('own-profile-button').hidden=true;$('other-profile-button').hidden=true;$('sign-out').hidden=true;$('mobile-sign-out').hidden=true;connectionStatus('Sign in required');return;}serverFresh=false;hasPendingWrites=false;syncError=false;everConnected=false;updateConnectionUI();currentUser=user.uid===USER_UIDS.Joe?'Joe':user.uid===USER_UIDS['Noémie']?'Noémie':null;if(!currentUser){await authSdk.signOut(auth);$('auth-error').textContent='This account is not on the two-person allowlist. Check the configured UIDs.';return;}$('auth-modal').hidden=true;window.OurSpaceIntro?.start();document.body.classList.remove('auth-pending');$('own-profile-button').hidden=false;$('other-profile-button').hidden=false;showProfileStatus();$('identity').textContent=`Signed in as ${currentUser}`;$('sign-out').hidden=false;$('mobile-sign-out').hidden=false;refreshHome();connectionStatus('Connecting');try{startListening();startPlacesToListener();startProfileListeners(user.uid);startMusicListener();}catch(err){connectionStatus('Permission error');notify('Database connection failed: '+err.message);}});}
+async function initFirebase(){const [appSdk,authSdk,dbSdk]=await Promise.all([import('https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js')]);firestore=dbSdk;authApi=authSdk;const app=appSdk.initializeApp(firebaseConfig);auth=authSdk.getAuth(app);db=dbSdk.getFirestore(app);authSdk.onAuthStateChanged(auth,async user=>{if(unsubscribe){unsubscribe();unsubscribe=null;}if(unsubscribePlacesTo){unsubscribePlacesTo();unsubscribePlacesTo=null;}if(unsubscribeProfiles){unsubscribeProfiles();unsubscribeProfiles=null;}if(unsubscribeKisses){unsubscribeKisses();unsubscribeKisses=null;}if(unsubscribeMusic){unsubscribeMusic();unsubscribeMusic=null;}if(unsubscribeLetter){unsubscribeLetter();unsubscribeLetter=null;}specialLetter=null;musicTracks=[];musicReady=false;renderMusic();profilesReady=false;kissesReady=false;sharedProfiles={};kisses=[];placesToFresh=false;if(!user){window.OurSpaceIntro?.cancel();serverFresh=false;hasPendingWrites=false;everConnected=false;writeInProgress=false;pins=[];placesTo=[];render();renderPlacesTo();$('auth-modal').hidden=false;document.body.classList.remove('auth-pending');$('own-profile-button').hidden=true;$('other-profile-button').hidden=true;$('sign-out').hidden=true;$('mobile-sign-out').hidden=true;connectionStatus('Sign in required');return;}serverFresh=false;hasPendingWrites=false;syncError=false;everConnected=false;updateConnectionUI();currentUser=user.uid===USER_UIDS.Joe?'Joe':user.uid===USER_UIDS['Noémie']?'Noémie':null;if(!currentUser){await authSdk.signOut(auth);$('auth-error').textContent='This account is not on the two-person allowlist. Check the configured UIDs.';return;}$('auth-modal').hidden=true;window.OurSpaceIntro?.start();document.body.classList.remove('auth-pending');$('own-profile-button').hidden=false;$('other-profile-button').hidden=false;showProfileStatus();$('identity').textContent=`Signed in as ${currentUser}`;$('sign-out').hidden=false;$('mobile-sign-out').hidden=false;refreshHome();connectionStatus('Connecting');try{startListening();startPlacesToListener();startProfileListeners(user.uid);startMusicListener();startLetterListener();}catch(err){connectionStatus('Permission error');notify('Database connection failed: '+err.message);}});}
 function openDeepLink(){const value=decodeURIComponent(location.hash.slice(1));if(!value.startsWith('place-'))return;const id=value.slice(6);if(pins.some(p=>p.id===id)){navigate('map');openDetails(id);}}
-function bindEvents(){bindMusic();bindProfiles();bindHomeKpis();document.querySelectorAll('.nav-link').forEach(b=>b.onclick=()=>navigate(b.dataset.section));document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>navigate(b.dataset.go));$('back-home').onclick=()=>navigate('home');$('soon-map').onclick=()=>navigate('map');$('open-sidebar').onclick=openSidebar;$('close-sidebar').onclick=closeSidebar;$('shade').onclick=closeSidebar;$('close-pin').onclick=closePinModal;$('cancel-pin').onclick=closePinModal;$('pin-form').addEventListener('submit',createPlace);$('search-form').addEventListener('submit',searchPlaces);$('fit-pins').onclick=fitPins;$('trip-list-toggle').onclick=()=>{tripListExpanded=!tripListExpanded;if(!tripListExpanded)filter='All';render();};
+function bindEvents(){bindMusic();bindProfiles();bindHomeKpis();bindLetters();document.querySelectorAll('.nav-link').forEach(b=>b.onclick=()=>navigate(b.dataset.section));document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>navigate(b.dataset.go));$('back-home').onclick=()=>navigate('home');$('soon-map').onclick=()=>navigate('map');$('open-sidebar').onclick=openSidebar;$('close-sidebar').onclick=closeSidebar;$('shade').onclick=closeSidebar;$('close-pin').onclick=closePinModal;$('cancel-pin').onclick=closePinModal;$('pin-form').addEventListener('submit',createPlace);$('search-form').addEventListener('submit',searchPlaces);$('fit-pins').onclick=fitPins;$('trip-list-toggle').onclick=()=>{tripListExpanded=!tripListExpanded;if(!tripListExpanded)filter='All';render();};
   $('trip-sort').onchange=e=>{tripSort=e.target.value;renderTripList();};
   document.querySelectorAll('[data-trip-filter]').forEach(b=>b.onclick=()=>{filter=b.dataset.tripFilter;render();});
-  $('map-expand').onclick=toggleMapExpanded;$('notifications-btn').onclick=()=>{$('notifications-modal').hidden=false;};$('close-notifications').onclick=()=>{$('notifications-modal').hidden=true;};$('kiss-celebration-close').onclick=closeKissCelebration;$('kiss-celebration-done').onclick=closeKissCelebration;$('kiss-celebration').addEventListener('click',e=>{if(e.target===$('kiss-celebration'))closeKissCelebration();});$('close-detail').onclick=closeDetails;$('save-description').onclick=saveDescription;$('cancel-description').onclick=()=>{$('edit-description-fields').hidden=true;};$('confirm-visited').onclick=saveVisit;document.querySelectorAll('.backdrop').forEach(el=>el.addEventListener('click',e=>{if(e.target!==el)return;if(el.id==='pin-modal')closePinModal();if(el.id==='detail-modal')closeDetails();if(el.id==='notifications-modal')el.hidden=true;}));document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(mapExpanded)toggleMapExpanded();closePinModal();closeDetails();$('notifications-modal').hidden=true;closeKissCelebration();$('search-results').hidden=true;closeSidebar();});$('demo-user').onchange=e=>{currentUser=e.target.value;localStorage.setItem('our-site-demo-user',currentUser);$('identity').textContent=`Preview as ${currentUser}`;showProfileStatus();render();refreshNotificationsWithKisses();};$('auth-form').addEventListener('submit',async e=>{e.preventDefault();$('auth-error').textContent='';const b=$('auth-form').querySelector('button');b.disabled=true;try{const username=$('username').value.trim().toLowerCase();const loginEmail=LOGIN_EMAILS[username];if(!loginEmail){$('auth-error').textContent='Use Joe or Captain as your username.';return;}await authApi.signInWithEmailAndPassword(auth,loginEmail,$('password').value);$('password').value='';}catch(err){$('auth-error').textContent=err.code==='auth/invalid-credential'?'Incorrect username or password.':err.message;}finally{b.disabled=false;}});$('sign-out').onclick=()=>authApi.signOut(auth);$('mobile-sign-out').onclick=()=>{if(confirm('Sign out of Our Space?'))authApi.signOut(auth);};$('home-review').onclick=()=>{$('notifications-modal').hidden=false;};window.addEventListener('offline',()=>{serverFresh=false;updateConnectionUI();});window.addEventListener('online',()=>{serverFresh=false;updateConnectionUI();});window.addEventListener('hashchange',()=>{if(location.hash.startsWith('#place-'))openDeepLink();else if(location.hash==='#map')navigate('map');else if(location.hash==='#home')navigate('home');});}
+  $('map-expand').onclick=toggleMapExpanded;$('notifications-btn').onclick=()=>{$('notifications-modal').hidden=false;};$('close-notifications').onclick=()=>{$('notifications-modal').hidden=true;};$('kiss-celebration-close').onclick=closeKissCelebration;$('kiss-celebration-done').onclick=closeKissCelebration;$('kiss-celebration').addEventListener('click',e=>{if(e.target===$('kiss-celebration'))closeKissCelebration();});$('close-detail').onclick=closeDetails;$('save-description').onclick=saveDescription;$('cancel-description').onclick=()=>{$('edit-description-fields').hidden=true;};$('confirm-visited').onclick=saveVisit;document.querySelectorAll('.backdrop').forEach(el=>el.addEventListener('click',e=>{if(e.target!==el)return;if(el.id==='pin-modal')closePinModal();if(el.id==='detail-modal')closeDetails();if(el.id==='notifications-modal')el.hidden=true;}));document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(mapExpanded)toggleMapExpanded();closePinModal();closeDetails();$('notifications-modal').hidden=true;closeKissCelebration();$('search-results').hidden=true;closeSidebar();});$('demo-user').onchange=e=>{currentUser=e.target.value;localStorage.setItem('our-site-demo-user',currentUser);$('identity').textContent=`Preview as ${currentUser}`;showProfileStatus();startLetterListener();render();refreshNotificationsWithKisses();};$('auth-form').addEventListener('submit',async e=>{e.preventDefault();$('auth-error').textContent='';const b=$('auth-form').querySelector('button');b.disabled=true;try{const username=$('username').value.trim().toLowerCase();const loginEmail=LOGIN_EMAILS[username];if(!loginEmail){$('auth-error').textContent='Use Joe or Captain as your username.';return;}await authApi.signInWithEmailAndPassword(auth,loginEmail,$('password').value);$('password').value='';}catch(err){$('auth-error').textContent=err.code==='auth/invalid-credential'?'Incorrect username or password.':err.message;}finally{b.disabled=false;}});$('sign-out').onclick=()=>authApi.signOut(auth);$('mobile-sign-out').onclick=()=>{if(confirm('Sign out of Our Space?'))authApi.signOut(auth);};$('home-review').onclick=()=>{$('notifications-modal').hidden=false;};window.addEventListener('offline',()=>{serverFresh=false;updateConnectionUI();});window.addEventListener('online',()=>{serverFresh=false;updateConnectionUI();});window.addEventListener('hashchange',()=>{if(location.hash.startsWith('#place-'))openDeepLink();else if(location.hash==='#map')navigate('map');else if(location.hash==='#home')navigate('home');});}
 // Music lives in a separate Firestore collection. Existing features are untouched.
 let musicTracks=[],musicReady=false,unsubscribeMusic=null,musicTab='current',musicSaving=false,musicPreviewData=null,musicUrlInputSerial=0,musicOpenTrackId=null,musicDeleting=false;
 function musicArtist(t){return String(t.artist||'').trim();}
@@ -534,7 +613,7 @@ function bindMusic(){
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMusicPlayer();closeShare();}});
 }
 
-async function main(){initMap();bindEvents();bindPlacesTo();navigate(location.hash==='#map'?'map':location.hash==='#music'?'music':'home');if(isDemo){$('auth-modal').hidden=true;document.body.classList.remove('auth-pending');$('preview').hidden=false;connectionStatus('Local preview');try{const stored=JSON.parse(localStorage.getItem(demoKey));pins=(Array.isArray(stored)?stored:STARTERS.map(p=>({...p}))).map(p=>p.id==='starter-norway'&&p.notes==='Northern lights and beautiful views, one day.'?{...p,notes:'fjords 😍😍😍'}:p);}catch{pins=STARTERS.map(p=>({...p}));}currentUser=localStorage.getItem('our-site-demo-user')||'Joe';$('demo-user').value=currentUser;$('identity').textContent=`Preview as ${currentUser}`;persistDemo();loadDemoPlacesTo();loadDemoMusic();$('own-profile-button').hidden=false;$('other-profile-button').hidden=false;startProfileListeners(USER_UIDS[currentUser]);refreshHome();openDeepLink();}else{try{await initFirebase();}catch(err){$('auth-modal').hidden=false;$('auth-error').textContent='Could not connect to the sign-in service. Please refresh to retry.';document.body.classList.remove('auth-pending');connectionStatus('Connection error');notify('Firebase failed to load: '+err.message);}}}
+async function main(){initMap();bindEvents();bindPlacesTo();navigate(location.hash==='#map'?'map':location.hash==='#music'?'music':'home');if(isDemo){$('auth-modal').hidden=true;document.body.classList.remove('auth-pending');$('preview').hidden=false;connectionStatus('Local preview');try{const stored=JSON.parse(localStorage.getItem(demoKey));pins=(Array.isArray(stored)?stored:STARTERS.map(p=>({...p}))).map(p=>p.id==='starter-norway'&&p.notes==='Northern lights and beautiful views, one day.'?{...p,notes:'fjords 😍😍😍'}:p);}catch{pins=STARTERS.map(p=>({...p}));}currentUser=localStorage.getItem('our-site-demo-user')||'Joe';$('demo-user').value=currentUser;$('identity').textContent=`Preview as ${currentUser}`;persistDemo();loadDemoPlacesTo();loadDemoMusic();$('own-profile-button').hidden=false;$('other-profile-button').hidden=false;startProfileListeners(USER_UIDS[currentUser]);startLetterListener();refreshHome();openDeepLink();}else{try{await initFirebase();}catch(err){$('auth-modal').hidden=false;$('auth-error').textContent='Could not connect to the sign-in service. Please refresh to retry.';document.body.classList.remove('auth-pending');connectionStatus('Connection error');notify('Firebase failed to load: '+err.message);}}}
 
 
 /* OUR PLACES TO — independent from the travel map, stored in /placesTo. */
@@ -618,7 +697,7 @@ function renderPlacesTo(){
     });
     table.append(tbody);wrap.append(table);root.append(wrap);
   }
-  const count=incoming().length+placesToIncoming().length+pendingKisses().length;
+  const count=incoming().length+placesToIncoming().length+pendingKisses().length+unreadLetterCount();
   $('notifications-count').textContent=count;
   $('notifications-btn').classList.toggle('has-new',count>0);
   renderNotifications();refreshHome();
