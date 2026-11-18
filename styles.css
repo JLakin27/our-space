@@ -452,3 +452,10 @@ body.cinematic-intro-playing .dodo-home-hint{visibility:hidden!important}
 
 .letter-reader-modal.letter-revealed .letter-envelope-flap{transform:rotateX(170deg)}
 .letter-reader-modal.letter-revealed .letter-envelope-seal{opacity:0}
+
+/* Private letter entry on recipient profile and irreversible deletion */
+.letter-profile-button{margin-top:10px;border:1px solid #e9cbbc;color:#9d5e55;background:#fff7f0;font-weight:750}
+.letter-profile-button:hover{background:#ffefe4}
+.letter-delete{display:block;margin:12px auto 0;background:transparent;border:0;color:#9d5e55;text-decoration:underline;text-underline-offset:3px;font-size:12px;cursor:pointer;padding:9px}
+.letter-delete:disabled{opacity:.5;cursor:wait}
+.letter-compose-modal .actions{flex-wrap:wrap}

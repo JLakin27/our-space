@@ -78,7 +78,7 @@ function openOtherProfile(){
   $('other-profile-vibe').textContent=p.statusEmoji?'Current vibe: '+p.statusEmoji:'No status selected';
   $('other-profile-large').textContent=p.avatarEmoji;
   $('other-profile-large').style.background=p.colour;
-  $('other-profile-modal').hidden=false;
+  renderLetterActions();$('other-profile-modal').hidden=false;
 }
 function closeProfileDialogs(){$('profile-modal').hidden=true;$('other-profile-modal').hidden=true;}
 async function saveProfile(e){
@@ -163,73 +163,106 @@ function closeKissCelebration(){
   $('kiss-celebration-scene').classList.remove('kiss-animate');
 }
 
-/* ONE-OFF PRIVATE LETTER — not a general messaging feature.
-   Joe may create exactly one document; Noémie can read and keep it. */
-const LETTER_ID='first-for-noemie';
-let specialLetter=null, unsubscribeLetter=null, letterSending=false, letterMarking=false;
-const unreadLetterCount=()=>currentUser==='Noémie'&&specialLetter&&!specialLetter.readAt?1:0;
+/* PRIVATE LETTERS — one real letter to Noémie, repeatable self-tests to Joe. */
+const LETTER_ID='first-for-noemie', TEST_LETTER_ID='test-for-joe';
+let specialLetter=null,testLetter=null,letterDelivered=false,unsubscribeLetter=null,unsubscribeTestLetter=null,unsubscribeLetterReceipt=null;
+let letterSending=false,letterMarking=false,letterDeleting=false,openedLetterId=null;
+const currentLetter=()=>currentUser==='Joe'?testLetter:currentUser==='Noémie'?specialLetter:null;
+const unreadLetterCount=()=>currentLetter()&&!currentLetter().readAt?1:0;
 function renderLetterActions(){
   const composer=$('letter-compose-open'),keepsakes=$('letter-keepsakes-open');
   if(!composer||!keepsakes)return;
-  composer.hidden=currentUser!=='Joe'||!!specialLetter;
-  keepsakes.hidden=currentUser!=='Noémie'||!specialLetter?.readAt;
+  composer.hidden=currentUser!=='Joe'||!!specialLetter||letterDelivered;
+  keepsakes.hidden=!currentLetter()?.readAt;
 }
 function letterChanged(){renderLetterActions();refreshNotificationsWithKisses();}
 function startLetterListener(){
   if(unsubscribeLetter){unsubscribeLetter();unsubscribeLetter=null;}
-  specialLetter=null;letterChanged();
-  if(isDemo){try{specialLetter=JSON.parse(localStorage.getItem('our-space-demo-first-letter')||'null');}catch{}letterChanged();return;}
+  if(unsubscribeTestLetter){unsubscribeTestLetter();unsubscribeTestLetter=null;}
+  if(unsubscribeLetterReceipt){unsubscribeLetterReceipt();unsubscribeLetterReceipt=null;}
+  specialLetter=null;testLetter=null;letterDelivered=false;letterChanged();
+  if(isDemo){try{specialLetter=JSON.parse(localStorage.getItem('our-space-demo-first-letter')||'null');testLetter=JSON.parse(localStorage.getItem('our-space-demo-test-letter')||'null');letterDelivered=!!specialLetter||localStorage.getItem('our-space-demo-letter-delivered')==='yes';}catch{}letterChanged();return;}
   unsubscribeLetter=firestore.onSnapshot(firestore.doc(db,'letters',LETTER_ID),snap=>{
-    specialLetter=snap.exists()?{id:snap.id,...snap.data()}:null;
-    letterChanged();
-  },err=>{notify('Letter could not load: '+err.message);});
+    specialLetter=snap.exists()?{id:snap.id,...snap.data()}:null;letterChanged();
+  },err=>notify('Letter could not load: '+err.message));
+  if(currentUser==='Joe'){
+    unsubscribeTestLetter=firestore.onSnapshot(firestore.doc(db,'letters',TEST_LETTER_ID),snap=>{testLetter=snap.exists()?{id:snap.id,...snap.data()}:null;letterChanged();},err=>notify('Test letter could not load: '+err.message));
+    unsubscribeLetterReceipt=firestore.onSnapshot(firestore.doc(db,'letterDispatches',LETTER_ID),snap=>{letterDelivered=snap.exists();letterChanged();},err=>notify('Letter delivery record could not load: '+err.message));
+  }
 }
-function closeLetterModal(){$('letter-reader-modal').hidden=true;$('letter-sheet').classList.remove('letter-opened');$('letter-reader-modal').classList.remove('letter-revealed');}
+function closeLetterModal(){$('letter-reader-modal').hidden=true;$('letter-sheet').classList.remove('letter-opened');$('letter-reader-modal').classList.remove('letter-revealed');openedLetterId=null;}
 async function openLetter(){
-  if(currentUser!=='Noémie'||!specialLetter)return;
+  const letter=currentLetter();if(!letter)return;
+  openedLetterId=currentUser==='Joe'?TEST_LETTER_ID:LETTER_ID;
   $('notifications-modal').hidden=true;
-  $('letter-paper-body').textContent=specialLetter.body||'';
+  $('letter-reader-title').textContent=currentUser==='Joe'?'Your test letter 💌':'A letter from Joe 💌';
+  $('letter-paper-body').textContent=letter.body||'';
+  $('letter-delete').textContent=currentUser==='Joe'?'Delete test letter permanently':'Delete letter permanently';
   $('letter-reader-modal').hidden=false;
   $('letter-sheet').classList.remove('letter-opened');$('letter-reader-modal').classList.remove('letter-revealed');
   requestAnimationFrame(()=>requestAnimationFrame(()=>{$('letter-sheet').classList.add('letter-opened');$('letter-reader-modal').classList.add('letter-revealed');}));
-  if(specialLetter.readAt||letterMarking)return;
+  if(letter.readAt||letterMarking)return;
   letterMarking=true;
   try{
-    if(isDemo){specialLetter.readAt=new Date().toISOString();localStorage.setItem('our-space-demo-first-letter',JSON.stringify(specialLetter));letterChanged();}
-    else await firestore.updateDoc(firestore.doc(db,'letters',LETTER_ID),{readAt:firestore.serverTimestamp()});
+    if(isDemo){letter.readAt=new Date().toISOString();localStorage.setItem(currentUser==='Joe'?'our-space-demo-test-letter':'our-space-demo-first-letter',JSON.stringify(letter));letterChanged();}
+    else await firestore.updateDoc(firestore.doc(db,'letters',openedLetterId),{readAt:firestore.serverTimestamp()});
   }catch(err){notify('The letter opened, but could not mark as read: '+err.message);}
   finally{letterMarking=false;}
 }
 function openLetterComposer(){
-  if(currentUser!=='Joe'||specialLetter)return;
+  if(currentUser!=='Joe'||specialLetter||letterDelivered)return;
   $('letter-form').reset();$('letter-compose-error').textContent='';
-  $('notifications-modal').hidden=true;$('letter-compose-modal').hidden=false;
+  $('other-profile-modal').hidden=true;$('letter-compose-modal').hidden=false;
 }
-async function sendSpecialLetter(e){
-  e.preventDefault();if(letterSending||currentUser!=='Joe'||specialLetter)return;
+async function sendSpecialLetter(e,isTest=false){
+  e?.preventDefault?.();if(letterSending||currentUser!=='Joe'||(!isTest&&(specialLetter||letterDelivered)))return;
   const body=$('letter-message').value.trim();
   if(!body||body.length>5000){$('letter-compose-error').textContent='Write a letter of up to 5,000 characters.';return;}
   if(!isDemo&&!canWrite()){$('letter-compose-error').textContent='Please wait until Connected appears.';return;}
-  if(!confirm('Send this one-off letter to Noémie? Once sent, it cannot be edited or unsent.'))return;
-  letterSending=true;const btn=$('letter-send');btn.disabled=true;btn.textContent='Delivering…';
+  if(isTest&&testLetter){$('letter-compose-error').textContent='Delete your previous test letter from your inbox before sending another.';return;}
+  if(!confirm(isTest?'Send a TEST letter to your own inbox? Noémie will not receive anything.':'Send this one-off letter to Noémie? This cannot be recalled, even if she later deletes it.'))return;
+  letterSending=true;const send=$('letter-send'),test=$('letter-test-send');send.disabled=true;test.disabled=true;
   try{
-    if(isDemo){specialLetter={fromUid:USER_UIDS.Joe,toUid:USER_UIDS['Noémie'],body,createdAt:new Date().toISOString(),readAt:null};localStorage.setItem('our-space-demo-first-letter',JSON.stringify(specialLetter));letterChanged();}
-    else await firestore.setDoc(firestore.doc(db,'letters',LETTER_ID),{
-      fromUid:USER_UIDS.Joe,toUid:USER_UIDS['Noémie'],body,
-      createdAt:firestore.serverTimestamp(),readAt:null
-    });
-    $('letter-compose-modal').hidden=true;notify('Your little letter has been delivered 💌');
+    const docId=isTest?TEST_LETTER_ID:LETTER_ID;
+    if(isDemo){
+      const letter={id:docId,fromUid:USER_UIDS.Joe,toUid:USER_UIDS[isTest?'Joe':'Noémie'],body,createdAt:new Date().toISOString(),readAt:null};
+      if(isTest){testLetter=letter;localStorage.setItem('our-space-demo-test-letter',JSON.stringify(letter));}
+      else{specialLetter=letter;letterDelivered=true;localStorage.setItem('our-space-demo-first-letter',JSON.stringify(letter));localStorage.setItem('our-space-demo-letter-delivered','yes');}letterChanged();
+    }else if(isTest){
+      await firestore.setDoc(firestore.doc(db,'letters',docId),{fromUid:USER_UIDS.Joe,toUid:USER_UIDS.Joe,body,createdAt:firestore.serverTimestamp(),readAt:null});
+    }else{
+      const batch=firestore.writeBatch(db);
+      batch.set(firestore.doc(db,'letters',docId),{fromUid:USER_UIDS.Joe,toUid:USER_UIDS['Noémie'],body,createdAt:firestore.serverTimestamp(),readAt:null});
+      batch.set(firestore.doc(db,'letterDispatches',LETTER_ID),{sentBy:USER_UIDS.Joe,createdAt:firestore.serverTimestamp()});
+      await batch.commit();letterDelivered=true;letterChanged();
+    }
+    $('letter-compose-modal').hidden=true;notify(isTest?'Test letter delivered to your own inbox 🧪':'Your little letter has been delivered 💌');
   }catch(err){$('letter-compose-error').textContent='Could not deliver: '+err.message;}
-  finally{letterSending=false;btn.disabled=false;btn.textContent='Send little letter 💌';}
+  finally{letterSending=false;send.disabled=false;test.disabled=false;}
+}
+async function deleteCurrentLetter(){
+  const letter=currentLetter();if(letterDeleting||!letter||!openedLetterId)return;
+  const id=openedLetterId;
+  if(!confirm(currentUser==='Joe'?'Permanently delete your test letter? You can send another test afterwards.':'Permanently delete this letter? You will never be able to recover or reopen it.'))return;
+  if(!isDemo&&!canWrite())return notify('Please reconnect before deleting a letter.');
+  letterDeleting=true;$('letter-delete').disabled=true;
+  try{
+    if(isDemo){if(id===TEST_LETTER_ID){testLetter=null;localStorage.removeItem('our-space-demo-test-letter');}else{specialLetter=null;localStorage.removeItem('our-space-demo-first-letter');}letterChanged();}
+    else await firestore.deleteDoc(firestore.doc(db,'letters',id));
+    closeLetterModal();notify('Letter permanently deleted.');
+  }catch(err){notify('Could not delete letter: '+err.message);}
+  finally{letterDeleting=false;$('letter-delete').disabled=false;}
 }
 function bindLetters(){
   $('letter-compose-open').onclick=openLetterComposer;
-  $('letter-keepsakes-open').onclick=()=>{$('notifications-modal').hidden=true;openLetter();};
+  $('letter-keepsakes-open').onclick=openLetter;
   $('letter-compose-close').onclick=()=>$('letter-compose-modal').hidden=true;
   $('letter-compose-cancel').onclick=()=>$('letter-compose-modal').hidden=true;
+  $('letter-test-send').onclick=()=>sendSpecialLetter(null,true);
   $('letter-reader-close').onclick=closeLetterModal;
   $('letter-reader-done').onclick=closeLetterModal;
-  $('letter-form').onsubmit=sendSpecialLetter;
+  $('letter-delete').onclick=deleteCurrentLetter;
+  $('letter-form').onsubmit=e=>sendSpecialLetter(e,false);
   ['letter-reader-modal','letter-compose-modal'].forEach(id=>$(id).addEventListener('click',e=>{
     if(e.target!==$(id))return;
     if(id==='letter-reader-modal')closeLetterModal();else $(id).hidden=true;
@@ -427,7 +460,7 @@ async function sharePlace(p){const url=new URL(location.href);url.hash='place-'+
 function renderNotifications(){
   const list=$('notifications-list');list.replaceChildren();const items=incoming(),extra=placesToIncoming(),mail=pendingKisses();
   renderLetterActions();
-  if(unreadLetterCount()){const b=document.createElement('button');b.className='notification-row letter-notification';b.innerHTML='<strong>💌 A little letter from Joe</strong><span>Something just for you · Tap to open</span>';b.onclick=openLetter;list.append(b);}
+  if(unreadLetterCount()){const b=document.createElement('button');b.className='notification-row letter-notification';b.innerHTML=currentUser==='Joe'?'<strong>🧪 Your test letter</strong><span>Tap to experience the real letter design</span>':'<strong>💌 A little letter from Joe</strong><span>Something just for you · Tap to open</span>';b.onclick=openLetter;list.append(b);}
   if(!items.length&&!extra.length&&!mail.length&&!unreadLetterCount()){list.innerHTML='<p class="empty">All caught up for now.</p>';return;}
   for(const k of mail){const b=document.createElement('button');b.className='notification-row kiss-notification';b.innerHTML=`<strong>😘 A little delivery from ${escapeHtml(nameForUid(k.fromUid)||'someone special')}</strong><span>Tap to open your kiss</span>`;b.onclick=()=>dismissKiss(k);list.append(b);}
   for(const p of extra){const b=document.createElement('button');b.className='notification-row';b.innerHTML=`<strong>😈 ${escapeHtml(p.name)}</strong><span>${escapeHtml(p.addedBy)} suggested a new list idea · Review →</span>`;b.onclick=()=>{$('notifications-modal').hidden=true;placesToTab='suggested';navigate('places');setPlacesTab('suggested');};list.append(b);}
@@ -494,7 +527,7 @@ function startListening(){
     notify('Database connection failed: '+err.message);
   });
 }
-async function initFirebase(){const [appSdk,authSdk,dbSdk]=await Promise.all([import('https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js')]);firestore=dbSdk;authApi=authSdk;const app=appSdk.initializeApp(firebaseConfig);auth=authSdk.getAuth(app);db=dbSdk.getFirestore(app);authSdk.onAuthStateChanged(auth,async user=>{if(unsubscribe){unsubscribe();unsubscribe=null;}if(unsubscribePlacesTo){unsubscribePlacesTo();unsubscribePlacesTo=null;}if(unsubscribeProfiles){unsubscribeProfiles();unsubscribeProfiles=null;}if(unsubscribeKisses){unsubscribeKisses();unsubscribeKisses=null;}if(unsubscribeMusic){unsubscribeMusic();unsubscribeMusic=null;}if(unsubscribeLetter){unsubscribeLetter();unsubscribeLetter=null;}specialLetter=null;musicTracks=[];musicReady=false;renderMusic();profilesReady=false;kissesReady=false;sharedProfiles={};kisses=[];placesToFresh=false;if(!user){window.OurSpaceIntro?.cancel();serverFresh=false;hasPendingWrites=false;everConnected=false;writeInProgress=false;pins=[];placesTo=[];render();renderPlacesTo();$('auth-modal').hidden=false;document.body.classList.remove('auth-pending');$('own-profile-button').hidden=true;$('other-profile-button').hidden=true;$('sign-out').hidden=true;$('mobile-sign-out').hidden=true;connectionStatus('Sign in required');return;}serverFresh=false;hasPendingWrites=false;syncError=false;everConnected=false;updateConnectionUI();currentUser=user.uid===USER_UIDS.Joe?'Joe':user.uid===USER_UIDS['Noémie']?'Noémie':null;if(!currentUser){await authSdk.signOut(auth);$('auth-error').textContent='This account is not on the two-person allowlist. Check the configured UIDs.';return;}$('auth-modal').hidden=true;window.OurSpaceIntro?.start();document.body.classList.remove('auth-pending');$('own-profile-button').hidden=false;$('other-profile-button').hidden=false;showProfileStatus();$('identity').textContent=`Signed in as ${currentUser}`;$('sign-out').hidden=false;$('mobile-sign-out').hidden=false;refreshHome();connectionStatus('Connecting');try{startListening();startPlacesToListener();startProfileListeners(user.uid);startMusicListener();startLetterListener();}catch(err){connectionStatus('Permission error');notify('Database connection failed: '+err.message);}});}
+async function initFirebase(){const [appSdk,authSdk,dbSdk]=await Promise.all([import('https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js')]);firestore=dbSdk;authApi=authSdk;const app=appSdk.initializeApp(firebaseConfig);auth=authSdk.getAuth(app);db=dbSdk.getFirestore(app);authSdk.onAuthStateChanged(auth,async user=>{if(unsubscribe){unsubscribe();unsubscribe=null;}if(unsubscribePlacesTo){unsubscribePlacesTo();unsubscribePlacesTo=null;}if(unsubscribeProfiles){unsubscribeProfiles();unsubscribeProfiles=null;}if(unsubscribeKisses){unsubscribeKisses();unsubscribeKisses=null;}if(unsubscribeMusic){unsubscribeMusic();unsubscribeMusic=null;}if(unsubscribeLetter){unsubscribeLetter();unsubscribeLetter=null;}if(unsubscribeTestLetter){unsubscribeTestLetter();unsubscribeTestLetter=null;}if(unsubscribeLetterReceipt){unsubscribeLetterReceipt();unsubscribeLetterReceipt=null;}specialLetter=null;testLetter=null;letterDelivered=false;musicTracks=[];musicReady=false;renderMusic();profilesReady=false;kissesReady=false;sharedProfiles={};kisses=[];placesToFresh=false;if(!user){window.OurSpaceIntro?.cancel();serverFresh=false;hasPendingWrites=false;everConnected=false;writeInProgress=false;pins=[];placesTo=[];render();renderPlacesTo();$('auth-modal').hidden=false;document.body.classList.remove('auth-pending');$('own-profile-button').hidden=true;$('other-profile-button').hidden=true;$('sign-out').hidden=true;$('mobile-sign-out').hidden=true;connectionStatus('Sign in required');return;}serverFresh=false;hasPendingWrites=false;syncError=false;everConnected=false;updateConnectionUI();currentUser=user.uid===USER_UIDS.Joe?'Joe':user.uid===USER_UIDS['Noémie']?'Noémie':null;if(!currentUser){await authSdk.signOut(auth);$('auth-error').textContent='This account is not on the two-person allowlist. Check the configured UIDs.';return;}$('auth-modal').hidden=true;window.OurSpaceIntro?.start();document.body.classList.remove('auth-pending');$('own-profile-button').hidden=false;$('other-profile-button').hidden=false;showProfileStatus();$('identity').textContent=`Signed in as ${currentUser}`;$('sign-out').hidden=false;$('mobile-sign-out').hidden=false;refreshHome();connectionStatus('Connecting');try{startListening();startPlacesToListener();startProfileListeners(user.uid);startMusicListener();startLetterListener();}catch(err){connectionStatus('Permission error');notify('Database connection failed: '+err.message);}});}
 function openDeepLink(){const value=decodeURIComponent(location.hash.slice(1));if(!value.startsWith('place-'))return;const id=value.slice(6);if(pins.some(p=>p.id===id)){navigate('map');openDetails(id);}}
 function bindEvents(){bindMusic();bindProfiles();bindHomeKpis();bindLetters();document.querySelectorAll('.nav-link').forEach(b=>b.onclick=()=>navigate(b.dataset.section));document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>navigate(b.dataset.go));$('back-home').onclick=()=>navigate('home');$('soon-map').onclick=()=>navigate('map');$('open-sidebar').onclick=openSidebar;$('close-sidebar').onclick=closeSidebar;$('shade').onclick=closeSidebar;$('close-pin').onclick=closePinModal;$('cancel-pin').onclick=closePinModal;$('pin-form').addEventListener('submit',createPlace);$('search-form').addEventListener('submit',searchPlaces);$('fit-pins').onclick=fitPins;$('trip-list-toggle').onclick=()=>{tripListExpanded=!tripListExpanded;if(!tripListExpanded)filter='All';render();};
   $('trip-sort').onchange=e=>{tripSort=e.target.value;renderTripList();};
